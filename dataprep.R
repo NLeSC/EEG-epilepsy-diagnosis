@@ -29,6 +29,7 @@ for (i in 1:length(uid)) { #unique id numbers
     if (nrow(data) >= 4096) { # only use files with at least 4096 data points
       data = data[1:4096,]
       sc = t(data)
+      # extract wavelets:
       require(wavelets)
       wtdata = NULL
       for (i in 1:nrow(sc)) {
@@ -39,16 +40,25 @@ for (i in 1:length(uid)) { #unique id numbers
       wtdata <- as.data.frame(wtdata)# all the 12 wavelets that are possible in a 4607 signal
       bands = c(rep(1,2048),rep(2,1024),rep(3,512),rep(4,256),rep(5,128),rep(6,64),rep(7,32),
                 rep(8,16),rep(9,8),rep(10,4),rep(11,2),rep(12,1),rep(0,1)) # see also names(wtdata)
+      # extract features from wavelets:
       for (j in 1:11) {
         df = as.data.frame(t(wtdata[,which(bands==j)]))
         A = as.data.frame(rbind(sapply(df,mean),sapply(df,sd),sapply(df,entropy))) #,sapply(df,en.entropy),sapply(df,approx_entropy)
         colnames(A) <- c( 'Fp2', 'Fp1', 'F8', 'F4', 'Fz', 'F3', 'F7', 
                           'A2','A1','T8','T7','C4', 'Cz', 'C3',  
-                          'P8', 'P4', 'Pz', 'P3', 'P7','O2', 'O1' )
+                          'P8', 'P4', 'Pz', 'P3', 'P7','O2', 'O1')
         A$method = c(paste0("mean",j),paste0("sd",j),paste0("entropy",j)) #"median","entropy",
         A$id = idnames[ind[1]]
         S = rbind(S,A)
       }
+      # extract features from the raw signals:
+      A = as.data.frame(rbind(sapply(data,mean),sapply(data,sd),sapply(data,entropy))) 
+      colnames(A) <- c( 'Fp2', 'Fp1', 'F8', 'F4', 'Fz', 'F3', 'F7', 
+                        'A2','A1','T8','T7','C4', 'Cz', 'C3',  
+                        'P8', 'P4', 'Pz', 'P3', 'P7','O2', 'O1')
+      A$method = c(paste0("mean raw"),paste0("sd raw"),paste0("entropy raw")) #"median","entropy",
+      A$id = idnames[ind[1]]
+      S = rbind(S,A)
       rm(A)
     }
   }

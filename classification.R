@@ -2,11 +2,18 @@ rm(list=ls())
 graphics.off()
 load(file="features.RData")
 
-# #========================================
-# # Classification, randomForest
+#==========================================
+# Consider starting with PCA to reduce size of data
+#...
+# PCA = prcomp(x=t(DAT),center=TRUE,scale=TRUE,na.action=na.omit, retx=TRUE,tol=0.01)
+# tmp = summary(PCA)
+# DAT = as.data.frame(PCA$rotation)
+#========================================
+# Classification, randomForest
 noepi = which(LAB$definitive_diagnosis == 1)
 epi = which(LAB$definitive_diagnosis == 2)
 all = c(noepi,epi)
+
 traini = c(sample(x=noepi,size=round(length(noepi)*0.4)),
            sample(x=epi,size=round(length(epi)*0.4)))
 testi = all[which(all %in% traini == FALSE)]
