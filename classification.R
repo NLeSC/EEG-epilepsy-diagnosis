@@ -8,6 +8,7 @@ PCA = prcomp(x=t(DAT),center=TRUE,scale=TRUE,na.action=na.omit, retx=TRUE,tol=0.
 tmp = summary(PCA)
 PCArot = as.data.frame(PCA$rotation)
 nPC = which(summary(PCA)$importance[3,] > 0.9)[1]
+print(nPC)
 DAT = PCArot[,1:nPC]
 #========================================
 # Classification, randomForest
@@ -26,7 +27,6 @@ DAT = DAT[traini,]
 LAB = LAB[traini,]
 #========================================
 # Classification, caret
-print("classification")
 library(caret)
 ctrl = trainControl(method = "repeatedcv",number=5,repeats=5)
 grid_rf = expand.grid(.mtry = c(4,8,16,32,64))

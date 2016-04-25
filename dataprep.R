@@ -10,7 +10,8 @@ require(randomForest); require(signal); require(moments)
 cn = c('Fp2', 'Fp1', 'F8', 'F4', 'Fz', 'F3', 'F7', 
        'A2','A1','T8','T7','C4', 'Cz', 'C3',  
        'P8', 'P4', 'Pz', 'P3', 'P7','O2', 'O1') # channel names
-fn = c("mean","sd","entropy","en.entropy","max","min","skewness","median","domfreq","maxpow") # feature names ,"lyapunov"
+fn = c("mean","sd","entropy","en.entropy","max","min","skewness",
+       "median","domfreq","maxpow","zerocross") # feature names ,"lyapunov"
 
 #--------------------------------------------------------
 # define generic function for feature extraction
@@ -30,6 +31,24 @@ getfeatures = function(x,fn) {
     pp = spectrum(x,plot=FALSE)
     maxpow = max(pp$spec^2)
   }
+  zerocross = function(x) { # counts the number of zero crossing
+    cc = rep(0,length(x))
+    bf.fil = function(y) { # band-pass filter
+      sf = 1000
+      lb = 0.2
+      hb = 50
+      Wc = matrix(0,2,1) 
+      Wc[1,1] = lb / (sf/2) 
+      Wc[2,1] = hb / (sf/2) 
+      n = 4
+      bf = signal::butter(n,Wc,type=c("pass")) 
+      bf.fil = signal::filter(bf,y) 
+    }
+    x = bf.fil(x)
+    cc[which(x >= 0)] = 1
+    cc[which(x < 0)] = 0
+    zerocross = length(which(abs(diff(cc)) == 1))
+  }
   t = c()
   if (length(which(fn=="mean")) >0) t = rbind(t,sapply(x,mean))
   if (length(which(fn=="sd")) >0) t = rbind(t,sapply(x,sd))
@@ -42,6 +61,7 @@ getfeatures = function(x,fn) {
   # if (length(which(fn=="lyapunov")) >0) t = rbind(t,sapply(x,lyapunov))
   if (length(which(fn=="domfreq")) >0) t = rbind(t,sapply(x,domfreq))
   if (length(which(fn=="maxpow")) >0) t = rbind(t,sapply(x,maxpow))
+  if (length(which(fn=="zerocross")) >0) t = rbind(t,sapply(x,zerocross))
   A = as.data.frame(t)
 }
 #--------------------------------------------------------
