@@ -156,7 +156,7 @@ W = reshape(data=S,timevar="method",idvar="id",direction="wide")
 W2 = W[which(W$id %in% labels$DB_number == TRUE),]
 DAT = W2[,-which(colnames(W2)=="id")]
 LAB = labels[which(labels$DB_number %in% W2$id == TRUE),]
-save(DAT,DATmed,DATsd,LAB,labels,file="features.RData")
+save(DAT,DATmed,DATsd,LAB,labels,file="data/features.RData")
 
 # approx.entropy = function(ts) { # aproximate entropy
 #   approx.entropy = pracma::approx_entropy(ts, edim = 2, r = 0.2*sd(ts), elag = 1)

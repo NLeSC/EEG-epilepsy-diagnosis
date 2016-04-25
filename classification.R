@@ -1,6 +1,6 @@
 rm(list=ls())
 graphics.off()
-load(file="features.RData")
+load(file="data/features.RData")
 
 #==========================================
 # Consider starting with PCA to reduce size of data:
