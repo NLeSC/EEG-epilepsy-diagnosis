@@ -2,56 +2,111 @@ rm(list=ls())
 graphics.off()
 setwd("/home/vincent/utrecht/EEG-epilepsy-diagnosis")
 load(file="data/features.RData")
-# jjjj
 # DAT = DATmax[,c(seq(1,50,by=5),seq(4,50,by=5),seq(5,50,by=5))]
 # merge min and max features
+varnames = names(DAT)
 
+getfeaturetype = function(x) {
+  return(unlist(strsplit(x,"[.]"))[2])
+}
 
-# TO DO:
-# - implement systematic comparison of different wavelets
+getwavelettype = function(x) {
+  return(unlist(strsplit(x,"[.]"))[3])
+}
+v2 = sapply(varnames,FUN = getwavelettype)
+v3 = sapply(varnames,FUN = getfeaturetype)
 
-#==========================================
-# Consider starting with PCA to reduce size of data:
-# PCA = prcomp(x=t(DAT),center=TRUE,scale=TRUE,na.action=na.omit, retx=TRUE,tol=0.05)
-# tmp = summary(PCA)
-# PCArot = as.data.frame(PCA$rotation)
-# nPC = which(summary(PCA)$importance[3,] > 0.99)[1]
-# print(nPC)
-# DAT = PCArot[,1:nPC]
+cut = which(LAB$definitive_diagnosis == 3)
+DAT = DAT[-cut,]
+LAB = LAB[-cut,]
 
-#========================================
-# Classification, randomForest
+#define subset:
 noepi = which(LAB$definitive_diagnosis == 1)
 epi = which(LAB$definitive_diagnosis == 2)
 all = c(noepi,epi)
 set.seed(300)
 traini = c(sample(x=noepi,size=round(length(noepi)*0.5)),
            sample(x=epi,size=round(length(epi)*0.5)))
-# testi = which(traini %in% 1:length(LAB) == FALSE)
-
-# colnames(DATsd) = paste0(colnames(DATsd),"_sd")
-# colnames(DATmed) = paste0(colnames(DATmed),"_med")
-# DAT = cbind(DATsd[traini,],DATmed[traini,])
-# jjjj
-DAT = DAT[traini,]
+A =  1:length(LAB$definitive_diagnosis)
+testi = which(A %in% traini == FALSE)
+LAB$definitive_diagnosis[which(LAB$definitive_diagnosis == 1)] = "NO"
+LAB$definitive_diagnosis[which(LAB$definitive_diagnosis == 2)] = "YES"
+LABtest = LAB[testi,]
 LAB = LAB[traini,]
+uv2 = unique(v2)
+uv3 = unique(v3)
+uv4 = c("rf","glm")
+Ncases = length(uv2) * length(uv3) * length(uv4)
+result = data.frame(wavelet=rep(" ",Ncases),
+                    feature=rep(" ",Ncases),
+                    model=rep(" ",Ncases),
+                    stringsAsFactors=FALSE)
+DAToriginal = DAT
 
-i1 = which(LAB$definitive_diagnosis == 1)
-i2 = which(LAB$definitive_diagnosis == 2)
-LAB$definitive_diagnosis[i1] = paste0("c",LAB$definitive_diagnosis[i1])
-LAB$definitive_diagnosis[i2] = paste0("c",LAB$definitive_diagnosis[i2])
-
-DAT$diagn = as.factor(LAB$definitive_diagnosis)
-
-#========================================
-# Classification, caret
+cnt = 1
 library(caret)
-ctrl = trainControl(method = "repeatedcv",number=10,repeats=1)
+require(psych)
+# kkk
+for (wtype in uv2) {
+  for (ftype in uv3) {
+    DAT = DAToriginal[,which(v2 == wtype & v3 == ftype)]
+    
+    # take subset and add labels
+    DATtest = DAT[testi,]
+    DAT = DAT[traini,]
+    DATtest$diagn = as.factor(LABtest$definitive_diagnosis)
+    DAT$diagn = as.factor(LAB$definitive_diagnosis)
+    
+    #   #==========================================
+    #   # Consider starting with PCA to reduce size of data:
+    #     PCA = prcomp(x=t(DAT),center=TRUE,scale=TRUE,na.action=na.omit, retx=TRUE,tol=0.05)
+    #     tmp = summary(PCA)
+    #     PCArot = as.data.frame(PCA$rotation)
+    #     nPC = which(summary(PCA)$importance[3,] > 0.99)[1]
+    #     print(nPC)
+    # DAT = PCArot[,1:nPC]
+    
+    # library(pROC)
+    #========================================
+    # Classification, caret
+#     ctrl = trainControl(method = "repeatedcv",number=5,repeats=2,savePrediction = T,classProbs=TRUE,
+#                         summaryFunction=twoClassSummary) #
+    ctrl = trainControl(method = "repeatedcv",number=5,repeats=1) #
+                        
+    for (modeli in c("rf","glm")) {
+      if (modeli == "rf") {
+        # random forest
+        grid_rf = expand.grid(.mtry = c(2,4,8,16))
+        m_rf = train(diagn ~ .,data=DAT,method="rf",metric="Kappa",trControl=ctrl,tuneGrid=grid_rf)
+      } else {
+        m_rf = train(diagn ~ .,  data=DAT, method="glm", metric="Kappa",family="binomial")
+      }
+      m_rf_test = predict(m_rf, DATtest)
+      confmat = table(m_rf_test,LABtest$definitive_diagnosis)
+      #============================================================
+      result$trainingkappa[cnt] = round(max(m_rf$results$Kappa),digits=2)
+      result$testkappa[cnt] = round(cohen.kappa(x=confmat)$kappa,digits=2)
+      result$wavelet[cnt] = wtype
+      result$feature[cnt] = ftype
+      result$model[cnt] = modeli
+      print(paste0(modeli," ",ftype," ",wtype," training:",result$trainingkappa[cnt]," test:",result$testkappa[cnt]))
+      cnt = cnt+1
+      # print(twoClassSummary(m_rf$pred,lev=levels(m_rf$pred$obs))) # now get kappa
+      
+#       selectedI = which(m_rf$pred$mtry == 16)
+#       plot.roc(as.numeric(m_rf$pred$obs[selectedI]),as.numeric(m_rf$pred$pred[selectedI]))
+# #       print(twoClassSummary(m_rf$pred,lev=levels(m_rf$pred$obs)))
+#       kjj
+    }
+  }
+}
+result = result[with(result,order(trainingkappa)),]
+# result$kappa = round(result$kappa,digits=3)
+# result$trainingkappa  = round(result$trainingkappa,digits=3)
 
-# random forest
-grid_rf = expand.grid(.mtry = c(2,4,8,16))
-m_rf = train(diagn ~ .,data=DAT,method="rf",metric="Kappa",trControl=ctrl,tuneGrid=grid_rf)
-print(m_rf)
+
+
+
 # # nnet
 # grid_nnet = expand.grid(.size = c(4,6),.decay=c(5e-4,5e-5)) 
 # m_nnet = train(diagn ~ .,data=DAT,method="nnet",metric="Kappa",trControl=ctrl,tuneGrid=grid_nnet)

@@ -11,7 +11,7 @@ cn = c('Fp2', 'Fp1', 'F8', 'F4', 'Fz', 'F3', 'F7',
 # featurenames to be extracted in a vector:
 # fn = c("mean","sd","entropy","en.entropy","max","min","skewness",
 #        "median","domfreq","maxpow","zerocross","RMS") # feature names ,"lyapunov"
-fn = c("sd","entropy")
+fn = c("sd","entropy","max","min")
 
 lf.fil = function(x) { # low-pass filter
   sf = 1000
@@ -38,10 +38,10 @@ cnt = 0
 #                  paste0("la",seq(8,20,by=2)), #Least Aymetric
 #                  paste0("bl",c(14,18,20)), #Best localized
 #                  paste0("c",seq(6,30,by=6))) # Coiflet
-filtertypes =  c(paste0("d",seq(2,4,by=2)), # Daubechies
-                 paste0("la",10), #Least Aymetric
-                 paste0("bl",18), #Best localized
-                 paste0("c",12)) # Coiflet
+filtertypes =  c(paste0("d",seq(2,20,by=2)), # Daubechies
+                 paste0("la",seq(8,20,by=2)), #Least Aymetric
+                 paste0("bl",c(14,18,20)), #Best localized
+                 paste0("c",seq(6,30,by=6))) # Coiflet
 
 require(wavelets)
 # Wavelets (?):
