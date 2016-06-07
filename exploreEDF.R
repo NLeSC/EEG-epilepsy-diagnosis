@@ -18,7 +18,7 @@ for (i in 3:16) {
   }
   x = S[[labels[i]]]$signal
   starttime = as.POSIXlt(as.numeric(S[[labels[i]]]$startTime),format="%d-%m-%Y %H:%M:%S",origin="01-01-1966 00:00:00 CEST")
-  ts = seq(from=starttime,by=1/128,length.out=length(x))
+  ts = seq(from=starttime,by=1/samplerate,length.out=length(x))
   plot(ts,x,type="l",main=labels[i])
   cnt = cnt +1
 }
