@@ -4,11 +4,12 @@ setwd("/home/vincent/utrecht/EEG-epilepsy-diagnosis")
 fname = "data/emotivexample/example-data-control--26.05.2016.22.37.50.edf"
 require(edfReader)
 H = readEdfHeader(fname)
-S = readEdfSignals(H,fragments=TRUE)
+S = readEdfSignals(H,fragments=FALSE)
 samplerate = S$AF3$sRate
-signal = S$AF3$signal
+# signal = S$AF3$signal
 labels = names(S)
 nLabels = length(labels)
+kk
 cnt = 8
 for (i in 3:16) {
   if (cnt == 8) {

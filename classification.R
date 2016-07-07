@@ -9,7 +9,6 @@ varnames = names(DAT)
 getfeaturetype = function(x) {
   return(unlist(strsplit(x,"[.]"))[2])
 }
-
 getwavelettype = function(x) {
   return(unlist(strsplit(x,"[.]"))[3])
 }
@@ -36,7 +35,7 @@ LAB = LAB[traini,]
 uv2 = unique(v2)
 uv3 = unique(v3)
 uv4 = c("rf","glm")
-Ncases = length(uv2) * length(uv3) * length(uv4)
+Ncases = length(uv2) * length(uv4) #* length(uv3) 
 result = data.frame(wavelet=rep(" ",Ncases),
                     feature=rep(" ",Ncases),
                     model=rep(" ",Ncases),
@@ -46,28 +45,29 @@ DAToriginal = DAT
 cnt = 1
 library(caret)
 require(psych)
-# kkk
 for (wtype in uv2) {
-  for (ftype in uv3) {
-    DAT = DAToriginal[,which(v2 == wtype & v3 == ftype)]
-    
+  # for (ftype in uv3) {
+    DAT = DAToriginal[,which(v2 == wtype )] #& v3 == ftype
     # take subset and add labels
     DATtest = DAT[testi,]
     DAT = DAT[traini,]
-    DATtest$diagn = as.factor(LABtest$definitive_diagnosis)
-    DAT$diagn = as.factor(LAB$definitive_diagnosis)
     
-    #   #==========================================
-    #   # Consider starting with PCA to reduce size of data:
-    #     PCA = prcomp(x=t(DAT),center=TRUE,scale=TRUE,na.action=na.omit, retx=TRUE,tol=0.05)
-    #     tmp = summary(PCA)
-    #     PCArot = as.data.frame(PCA$rotation)
-    #     nPC = which(summary(PCA)$importance[3,] > 0.99)[1]
-    #     print(nPC)
-    # DAT = PCArot[,1:nPC]
+    #==========================================
+    # Consider starting with PCA to reduce size of data:
+#     PCA = prcomp(x=t(DAT),center=TRUE,scale=TRUE,na.action=na.omit, retx=TRUE,tol=0.05)
+#     tmp = summary(PCA)
+#     PCArot = as.data.frame(PCA$rotation)
+#     nPC = which(summary(PCA)$importance[3,] > 0.90)[1]
+#     print(nPC)
+#     DAT = PCArot[,1:nPC]
     
     # library(pROC)
     #========================================
+    
+    
+    DATtest$diagn = as.factor(LABtest$definitive_diagnosis)
+    DAT$diagn = as.factor(LAB$definitive_diagnosis)
+
     # Classification, caret
 #     ctrl = trainControl(method = "repeatedcv",number=5,repeats=2,savePrediction = T,classProbs=TRUE,
 #                         summaryFunction=twoClassSummary) #
@@ -87,9 +87,10 @@ for (wtype in uv2) {
       result$trainingkappa[cnt] = round(max(m_rf$results$Kappa),digits=2)
       result$testkappa[cnt] = round(cohen.kappa(x=confmat)$kappa,digits=2)
       result$wavelet[cnt] = wtype
-      result$feature[cnt] = ftype
+      # result$feature[cnt] =  ftype
       result$model[cnt] = modeli
-      print(paste0(modeli," ",ftype," ",wtype," training:",result$trainingkappa[cnt]," test:",result$testkappa[cnt]))
+      # print(paste0(modeli," ",ftype," ",wtype," training:",result$trainingkappa[cnt]," test:",result$testkappa[cnt]))
+      print(paste0(modeli," ",wtype," training:",result$trainingkappa[cnt]," test:",result$testkappa[cnt]))
       cnt = cnt+1
       # print(twoClassSummary(m_rf$pred,lev=levels(m_rf$pred$obs))) # now get kappa
       
@@ -99,13 +100,12 @@ for (wtype in uv2) {
 #       kjj
     }
   }
-}
+# }
 result = result[with(result,order(trainingkappa)),]
 # result$kappa = round(result$kappa,digits=3)
 # result$trainingkappa  = round(result$trainingkappa,digits=3)
 
-
-
+write.csv(result,file="data/result.csv")
 
 # # nnet
 # grid_nnet = expand.grid(.size = c(4,6),.decay=c(5e-4,5e-5)) 

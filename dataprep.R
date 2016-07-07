@@ -6,21 +6,20 @@ datadir = "data/eeg"
 labels = read.csv("data/labels.csv")
 require(reshape)
 cn = c('Fp2', 'Fp1', 'F8', 'F4', 'Fz', 'F3', 'F7', 
-       'A2','A1','T8','T7','C4', 'Cz', 'C3',  
-       'P8', 'P4', 'Pz', 'P3', 'P7','O2', 'O1') # channel names
+       'A2','A1','T8','T7','C4', 'Cz', 'C3',  'P8', 'P4', 'Pz', 'P3', 'P7','O2', 'O1') # channel names
 # featurenames to be extracted in a vector:
 # fn = c("mean","sd","entropy","en.entropy","max","min","skewness",
 #        "median","domfreq","maxpow","zerocross","RMS") # feature names ,"lyapunov"
 fn = c("sd","entropy","max","min")
 
-lf.fil = function(x) { # low-pass filter
-  sf = 1000
-  lb = 60
-  Wc = lb / (sf/2) 
-  n = 4
-  lf = signal::butter(n,Wc,type=c("low")) 
-  lf.fil = signal::filter(lf,x) 
-}
+# lf.fil = function(x) { # low-pass filter
+#   sf = 512
+#   lb = 60
+#   Wc = lb / (sf/2) 
+#   n = 4
+#   lf = signal::butter(n,Wc,type=c("low")) 
+#   lf.fil = signal::filter(lf,x) 
+# }
 #--------------------------------------------------------
 # extract patient identifiers from filename
 fnames = list.files(datadir,include.dirs=FALSE,full.names = FALSE)
@@ -45,10 +44,16 @@ filtertypes =  c(paste0("d",seq(2,20,by=2)), # Daubechies
 
 require(wavelets)
 # Wavelets (?):
-#1: 1024-2048 Hz;  #2: 512-1024 Hz; #3: 256-512 Hz
-#4: 128-256 Hz;    #5: 64-128 Hz;   #6: 32-64 Hz
-#7: 16-32 Hz beta; #8: 8-16 Hz alpha;    #9: 4-8 Hz theta
-#10: 2-4 Hz delta; #11: 1-2 Hz delta;    #12: 0.5-1 Hz delta
+#1: 1024-2048 samplewindow;  #2: 512-1024 samplewindow; #3: 256-512 samplewindow
+#4: 128-256 samplewindow;    #5: 64-128 samplewindow;   #6: 32-64 samplewindow
+#7: 16-32 samplewindow beta; #8: 8-16 samplewindow alpha;    #9: 4-8 samplewindow theta
+#10: 2-4 samplewindow delta; #11: 1-2 samplewindow delta;    #12: 0.5-1 samplewindow delta
+# Sample frequency is 512Hz, so this roughly corresponds to:
+#1: 128-256 Hertz;  #2: 64-128 Hertz; #3: 32-64 Hertz
+#4: 16-32 Hertz beta;    #5: 8-16 Hertz alpha;   #6: 4-8 Hertz theta
+#7: 2-4 Hertz delta; #8: 1-2 Hertz delta;    #9: 0.5-1 Hertz delta
+#10: 0.25-0.5 Hertz delta; #11: 0.125-0.25 Hertz delta;    #12: 0.0625-0.125 Hertz delta
+
 print(paste("filtertypes: ",paste(filtertypes,collapse=" ")))
 print(paste("N persons: ",paste(length(uid))))
 for (i in 1:length(uid)) { #unique id numbers
@@ -83,15 +88,22 @@ for (i in 1:length(uid)) { #unique id numbers
           tmp = as.data.frame(t(tmp))
           tmp2 = as.numeric(apply(A,1,max)) # maximum features value across channels
           tmp2 = as.data.frame(t(tmp2))
-          tmp3 = cbind(tmp,tmp2)
-          colnames(tmp3) =c(paste0(1:12,".",featuresi,".",firi,".min"),paste0(1:12,".",featuresi,".",firi,".max")) # add labels and merge
+          tmp3 = as.numeric(apply(A,1,mean)) # mean features value across channels
+          tmp3 = as.data.frame(t(tmp3))
+          tmp5 = as.numeric(apply(A,1,sd)) # sd features value across channels
+          tmp5 = as.data.frame(t(tmp5))
+          tmp4 = cbind(tmp,tmp2,tmp3,tmp5)
+          colnames(tmp4) =c(paste0(1:12,".",featuresi,".",firi,".min"),
+                            paste0(1:12,".",featuresi,".",firi,".max"),
+                            paste0(1:12,".",featuresi,".",firi,".mean"),
+                            paste0(1:12,".",featuresi,".",firi,".sd")) # add labels and merge
           if (length(G) == 0) {
-            G = tmp3
+            G = tmp4
           } else {
-            G = cbind(G,tmp3)  
+            G = cbind(G,tmp4)
           }
         }
-        rm(tmp3)
+        rm(tmp4)
       }
       G$id = idnames[ind[1]]
       S = rbind(S,G)
