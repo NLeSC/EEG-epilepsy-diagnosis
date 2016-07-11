@@ -5,16 +5,17 @@ source("getfeatures.R")
 datadir = "/media/windows-share/EEGs_Guinea-Bissau_cleaned"
 # require(reshape)
 library(wavelets)
+library(pracma)
 #==========================================================
 # featurenames and wavelet filter types to be extracted:
-# fn = c("mean","sd","entropy","en.entropy","max","min","skewness",
-#        "median","domfreq","maxpow","zerocross","RMS") # feature names ,"lyapunov"
-fn = c("sd","entropy","max","min") #
+# fn = c("mean","sd","entropy","max","min","skewness",
+#        "median","domfreq","maxpow","zerocross","RMS","pracma.samen") # feature names ,"lyapunov"
+fn = c("sd","entropy","min","max") #
 # filtertypes =  c(paste0("d",seq(2,20,by=2)), # Daubechies
 #                  paste0("la",seq(8,20,by=2)), #Least Aymetric
 #                  paste0("bl",c(14,18,20)), #Best localized
 #                  paste0("c",seq(6,30,by=6))) # Coiflet
-filtertypes =  c(paste0("d",seq(2,20,by=2)), # Daubechies
+filtertypes =  c(paste0("d",seq(2,20,by=4)), # Daubechies
                  paste0("la",seq(8,20,by=2)), #Least Aymetric
                  paste0("bl",c(14,18,20)), #Best localized
                  paste0("c",seq(6,30,by=6))) # Coiflet
@@ -22,7 +23,7 @@ filtertypes =  c(paste0("d",seq(2,20,by=2)), # Daubechies
 # other parameters
 sf = 128
 n.levels = 7
-siglen = 4*sf
+siglen = 15*sf
 # filenames
 files = list.files(datadir,include.dirs=TRUE,full.names = TRUE)
 files_short = list.files(datadir,include.dirs=FALSE,full.names = FALSE)
@@ -43,6 +44,16 @@ getdur = function(x) {
   tmp2 = unlist(strsplit(tmp,"dur"))[2]
   return(as.numeric(tmp2))
 }
+bf.fil = function(x,sf) { # low-pass filter
+  hb = floor(sf/2) - 1
+  lb = 0.5 #we only have 4 seconds of data, so there is no point at looking at < 0.25 Hz
+  Wc = matrix(0,2,1)
+  Wc[1,1] = lb / (sf/2)
+  Wc[2,1] = hb / (sf/2)
+  bf = signal::butter(n=4,Wc,type=c("pass")) 
+  bf.fil = signal::filter(bf,x) 
+}
+
 metadata = data.frame(id = as.numeric(sapply(files_short,getid)),
                       protocol = as.character(sapply(files_short,getprotocol)),
                       diagnosis =  as.character(sapply(files_short,getdiagnosis)),
@@ -54,7 +65,7 @@ cnt = 0 #counter for showing process in console
 print(paste("filtertypes: ",paste(filtertypes,collapse=" ")))
 print(paste("N files: ",paste(length(files_short))))
 for (i in 1:length(files_short)) { #unique id numbers
-  if (cnt == 4) { # print progress of processing
+  if (cnt == 2) { # print progress of processing
     prog = round((i/length(files_short)) * 1000)/ 10
     print(paste0(prog," %"))
     cnt = 0
@@ -66,6 +77,8 @@ for (i in 1:length(files_short)) { #unique id numbers
     sc = t(data)
     wtdata = NULL
     G = c()
+    sc = t(apply(sc,1,bf.fil,sf)) # band-pass filter each signal before performing wavelet analyses
+    
     # Wavelets:
     #1: 32-64 samplewindow #2: 16-32 samplewindow beta; #3: 8-16 samplewindow alpha;
     #4: 4-8 samplewindow theta #5: 2-4 samplewindow delta; #6: 1-2 samplewindow delta;    #7: 0.5-1 samplewindow delta

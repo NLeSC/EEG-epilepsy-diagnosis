@@ -66,7 +66,7 @@ for (i in uid) { #loop over unique id numbers
       # add labels to unfit parts of the data based on researcher remarks:
       ikne = which(knownerrors.df[,1] == i)
       if (length(ikne) > 0) {
-        for (j in length(ikne)) {
+        for (j in 1:length(ikne)) {
           tmp1 = as.numeric(unlist(strsplit(knownerrors.df[ikne[j],2],":")))
           tmp2 = tmp1[1] * 60 + tmp1[2]
           tmp3 = as.numeric(unlist(strsplit(knownerrors.df[ikne[j],3],":")))
@@ -77,8 +77,9 @@ for (i in uid) { #loop over unique id numbers
       #======================================================================
       # Add labels to measurement parts to clarify protocol, eyes open or closed:
       # identify the two measurement sections
-      section1 = (120*sf+5*sf):(240*sf-5*sf)
-      section2 = (240*sf+5*sf):nrow(D)
+      section1 = (125*sf):(235*sf)
+      endindex = min(c(nrow(D),355*sf))
+      section2 = (245*sf):endindex #nrow(D)
       # add labels
       if (metadata$Eyes.condition[ind] == "closed-3min-then-open-2min") {
         closedi = section1; openi = section2

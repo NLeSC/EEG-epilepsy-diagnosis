@@ -5,11 +5,14 @@ getfeatures = function(x,fns) {
   # Note: approx_entropy from pracma package is very slow
   require(entropy)
   require(signal); require(moments)
-  
+  library(pracma)
   # x: dataframe with multiple signals in columns over which the feature is calculated
   # fn: feature names that need to be calculated
   en.entropy = function(x) { # entropy
     en.entropy = entropy::entropy(discretize(as.numeric(x)+runif(n=length(x),min=0,max=1e-8)+0.0001,numBins=100))
+  }
+  pracma.samen = function(x) { #sample entropy
+    pracma.samen = pracma::sample_entropy(x)
   }
   domfreq = function(x) {
     pp = spectrum(x,plot=FALSE)
@@ -40,21 +43,15 @@ getfeatures = function(x,fns) {
     cc[which(x < 0)] = 0
     zerocross = length(which(abs(diff(cc)) == 1))
   }
-  # t = c()
   if (length(which(fns=="mean")) >0) A=aggregate(x=x,by=list(x$bands),mean)
-  if (length(which(fns=="sd")) >0) A=aggregate(x=x,by=list(bands),sd)
+  if (length(which(fns=="sd")) >0) A=aggregate(x=x,by=list(x$bands),sd)
   if (length(which(fns=="entropy")) >0) {
-    A=aggregate(x=x,by=list(bands),en.entropy)
+    A=aggregate(x=x,by=list(x$bands),en.entropy)
   }
-    # if (length(which(fn=="en.entropy")) >0) t = rbind(t,sapply(x,en.entropy))
-  #   if (length(which(fn=="max")) >0) t = rbind(t,sapply(x,max))
-  #   if (length(which(fn=="min")) >0) t = rbind(t,sapply(x,min))
-  #   if (length(which(fn=="skewness")) >0) t = rbind(t,sapply(x,moments::skewness))
-  #   if (length(which(fn=="median")) >0) t = rbind(t,sapply(x,median))
-  #   if (length(which(fn=="domfreq")) >0) t = rbind(t,sapply(x,domfreq))
-  #   if (length(which(fn=="maxpow")) >0) t = rbind(t,sapply(x,maxpow))
-  #   if (length(which(fn=="zerocross")) >0) t = rbind(t,sapply(x,zerocross))
-  if (length(which(fn=="RMS")) >0) A=aggregate(x=x,by=list(bands),RMS)
-  # A = as.data.frame(t)
+  if (length(which(fns=="pracma.samen")) >0) {
+    A=aggregate(x=x,by=list(x$bands),pracma.samen)
+  }
+  # if (length(which(fns =="RMS")) >0) A=aggregate(x=x,by=list(x$bands),RMS)
   return(A)
+  
 }
