@@ -38,8 +38,9 @@ knownerrors.df = data.frame(matrix(unlist(knownerrors),ncol=3,byrow=T),stringsAs
 # initialize some parameters before loading and processing all the data
 cnt = 0 #counter for showing process in console
 print(paste("N unique ids: ",paste(length(uid))))
-amountdata = matrix(NA,length(uid),2)
+amountdata = matrix(NA,length(uid),3)
 for (i in uid) { #loop over unique id numbers
+  
   if (cnt == 5) { # print progress after every 5 files
     prog = round((i/length(uid)) * 1000)/ 10
     print(paste0(prog," %"))
@@ -48,6 +49,7 @@ for (i in uid) { #loop over unique id numbers
   cnt = cnt + 1
   ind = which(metadata$subject.id == i)[1] #which metadata belongs to this id
   if (length(ind) > 0) { # if there is metadata for this file
+    amountdata[ind,3] = i
     D = read.csv(files[which(files_short == metadata$fnames[ind])])
     # we do expect measurements of 5 minutes, but lets include all with > 4 minutes for now:
     if (nrow(D) >= (4 * 60 * sf)) {
@@ -85,6 +87,7 @@ for (i in uid) { #loop over unique id numbers
         closedi = section1; openi = section2
       } else {
         closedi = section2; openi = section1
+      
       }
       D$protocol = "unknown"
       D$protocol[closedi] = "closed"
@@ -93,26 +96,33 @@ for (i in uid) { #loop over unique id numbers
       # investigate length of healthy time segments per protocol and
       # export longest continuous healthy protocol part to a csv
       for (protocol in c("open","closed")) {
-        meetcondition = which(D$quality != 1 | D$protocol != protocol)
-        boutdur = diff(meetcondition)
-        maxdur = max(boutdur)
-        if (maxdur/sf < 4) { #store if there is at least 4 seconds of data
+        poordataindices = which(D$quality != 1 & D$protocol == protocol)
+        startend = range(which(D$protocol == protocol))
+        poordataindices = c(startend[1],poordataindices,startend[2]) #add first and last sample
+        boutdur = diff(poordataindices) #lengths of good bouts
+        atleast4sec = which(boutdur > sf *4)
+        if (length(atleast4sec) > 0) {
+          boutdur_long = boutdur[atleast4sec]
+          print(paste0("N blocks: ",length(boutdur_long)))
+          for (ii in 1:length(boutdur_long)) {
+            bi = which(boutdur == boutdur_long[ii])
+            select = (poordataindices[bi]+1):(poordataindices[bi+1]-1)
+            if (protocol == "open") {
+              dataopen = D[select,]
+              amountdata[ind,1] = boutdur_long[ii]/sf
+              write.csv(dataopen,paste0(outputdir,"/eyesopen_id",metadata$subject.id[ind],"_dur",
+                                        floor(boutdur_long[ii]/sf),
+                                        "_epoch",ii,"_gro",metadata$Group[ind],".csv"),row.names=FALSE)
+            }
+            if (protocol == "closed") {
+              dataclosed = D[select,]
+              amountdata[ind,2] = boutdur_long[ii]/sf
+              write.csv(dataclosed,paste0(outputdir,"/eyesclosed_id",metadata$subject.id[ind],"_dur",
+                                          floor(boutdur_long[ii]/sf),"_gro",metadata$Group[ind],".csv"),row.names=FALSE)
+            }
+          }
+        } else { #store if there is at least 4 seconds of data
           print("not sufficient data") #no data is saved
-        } else {
-          maxbi = which.max(boutdur)
-          select = (meetcondition[maxbi]+1):(meetcondition[maxbi+1]-1)
-          if (protocol == "open") {
-            dataopen = D[select,]
-            amountdata[ind,1] = maxdur/sf
-            write.csv(dataopen,paste0(outputdir,"/eyesopen_id",metadata$subject.id[ind],"_dur",
-                                      floor(maxdur/sf),"_gro",metadata$Group[ind],".csv"),row.names=FALSE)
-          }
-          if (protocol == "closed") {
-            dataclosed = D[select,]
-            amountdata[ind,2] = maxdur/sf
-            write.csv(dataclosed,paste0(outputdir,"/eyesclosed_id",metadata$subject.id[ind],"_dur",
-                                        floor(maxdur/sf),"_gro",metadata$Group[ind],".csv"),row.names=FALSE)
-          }
         }
       }
       rm(D)
