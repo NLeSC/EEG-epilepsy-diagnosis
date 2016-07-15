@@ -3,6 +3,8 @@ graphics.off()
 setwd("/home/vincent/utrecht/EEG-epilepsy-diagnosis")
 load(file="data/features_ginneabissau.RData")
 
+LOG = read.csv("/media/windows-share/EEGs_Guinea-Bissau_np/log.csv",stringsAsFactors = FALSE)
+
 # make sure that both LAB and DAT have matching row order
 getid = function(x) {
   tmp = unlist(strsplit(x,"_"))[2]
@@ -12,7 +14,6 @@ getid = function(x) {
 DAT$id = as.numeric(sapply(DAT$fnames,getid))
 DAT = DAT[order(DAT$id),]
 if (length(which((rownames(LAB) == DAT$fnames) == FALSE)) > 0) print("Error: data order does not match")
-
 
 # DAT = DATmax[,c(seq(1,50,by=5),seq(4,50,by=5),seq(5,50,by=5))]
 # merge min and max features
@@ -39,20 +40,24 @@ getwavelettype = function(x) {
 }
 v2 = sapply(varnames,FUN = getwavelettype)
 v3 = sapply(varnames,FUN = getfeaturetype)
-cut = which(LAB$protocol == "eyesclosed")
-DAT = DAT[-cut,]
-LAB = LAB[-cut,]
 
-#define training and testing subset:
-noepi = which(as.character(LAB$diagnosis) == "Control")
-epi = which(as.character(LAB$diagnosis) == "Epilepsy")
-set.seed(300)
-traini = c(sample(x=noepi,size=round(length(noepi)*0.5)),
-           sample(x=epi,size=round(length(epi)*0.5)))
-A =  1:length(LAB$diagnosis)
-testi = which(A %in% traini == FALSE)
-LABtest = LAB[testi,]
+lookatprotocol = "closed"
+# training set
+train_fnames = LOG[which(LOG$set == "train" & LOG$dur == 10 & LOG$protocol == lookatprotocol),]$filename
+traini = which((rownames(LAB) %in% train_fnames) == TRUE)
 LABtrain = LAB[traini,]
+DATtrain = DAT[traini,]
+# test set
+test_fnames = LOG[which(LOG$set == "test" & LOG$dur == 10 & LOG$protocol == lookatprotocol),]$filename
+testi = which((rownames(LAB) %in% test_fnames) == TRUE)
+LABtest = LAB[testi,]
+DATtest = DAT[testi,]
+# validation set
+val_fnames = LOG[which(LOG$set == "valid" & LOG$dur == 10 & LOG$protocol == lookatprotocol),]$filename
+vali = which((rownames(LAB) %in% val_fnames) == TRUE)
+LABval = LAB[vali,]
+DATval = DAT[vali,]
+
 # define models to be trained
 uv2 = unique(v2)
 uv3 = unique(v3)
@@ -62,45 +67,46 @@ result = data.frame(wavelet=rep(" ",Ncases),
                     feature=rep(" ",Ncases),
                     model=rep(" ",Ncases),
                     stringsAsFactors=FALSE)
-DAToriginal = DAT
-
+# DAToriginal = DAT
+DATtest$diagn = as.factor(LABtest$diagnosis)
+DATtrain$diagn = as.factor(LABtrain$diagnosis)
 cnt = 1
 library(caret)
 require(psych)
-library(ROCR)
+# library(ROCR)
+library(pROC)
 for (wtype in uv2) {
   # for (ftype in uv3) {
-  DAT = DAToriginal[,which(v2 == wtype )] #& v3 == ftype
-  # take subset and add labels
-  DATtest = DAT[testi,]
-  DATtrain = DAT[traini,]
-  DATtest$diagn = as.factor(LABtest$diagnosis)
-  DATtrain$diagn = as.factor(LABtrain$diagnosis)
-  ctrl = trainControl(method = "LOOCV",number=5,repeats=1) #"repeatedcv"
+  
+  ctrl = trainControl(method = "LOOCV",number=3,repeats=1) #"repeatedcv"
   # ,  savePredictions = TRUE,classProbs=TRUE,summaryFunction = twoClassSummary
   for (modeli in c("rf","glm")) {
+    print(paste0(wtype," ",modeli))
     #============================================================
     # training
     if (modeli == "rf") {
       # random forest
       grid_rf = expand.grid(.mtry = c(2)) #2,4,8,16
-      m_rf = train(diagn ~ .,data=DATtrain,method="rf",metric="Kappa",trControl=ctrl,tuneGrid=grid_rf)
+      m_rf = train(diagn ~ .,data=DATtrain[,c(which(v2==wtype),ncol(DATtrain))],method="rf",metric="Kappa",trControl=ctrl,tuneGrid=grid_rf)
     } else {
-      m_rf = train(diagn ~ .,  data=DATtrain, method="glm", metric="Kappa",family="binomial")
+      m_rf = train(diagn ~ .,  data=DATtrain[,c(which(v2==wtype),ncol(DATtrain))], method="glm", metric="Kappa",family="binomial")
     }
     result$training.kappa[cnt] = round(max(m_rf$results$Kappa),digits=3)
+    #===========================================================
+    # TO DO: implement hyperparameter optimization using the validation set
+    
     #============================================================
     # testing
     pred_test = predict(m_rf, DATtest[,1:(ncol(DATtest)-1)],type="prob")
     result.roc <- roc(DATtest$diagn, pred_test$Control)
     # Code to plot the ROC curve if we wanted to:
-#         x11()
-#         plot(result.roc, print.thres="best", print.thres.best.method="closest.topleft")
+    #         x11()
+    #         plot(result.roc, print.thres="best", print.thres.best.method="closest.topleft")
     auctest = result.roc$auc
     result.coords <- coords(result.roc, "best", best.method="closest.topleft", ret=c("threshold", "accuracy"))
     result$test.auc[cnt] = round(auctest,digits=3)
-#     result$test.threshold[cnt] = round(result.coords[1],digits=3)
-#     result$test.accuracy[cnt] = round(result.coords[2],digits=3)
+    #     result$test.threshold[cnt] = round(result.coords[1],digits=3)
+    #     result$test.accuracy[cnt] = round(result.coords[2],digits=3)
     # Kappa statistic as an alternative performance metric:
     pred_test_cat = rep("Control",nrow(pred_test))
     pred_test_cat[pred_test$Epilepsy > 0.500] = "Epilepsy"
@@ -111,8 +117,8 @@ for (wtype in uv2) {
     result$wavelet[cnt] = wtype
     result$model[cnt] = modeli
     print(paste0(modeli," ",wtype," training K:",result$training.kappa[cnt],
-                                  " test K:",result$test.kappa[cnt],
-                                  " test auc:",result$test.auc[cnt]))
+                 " test K:",result$test.kappa[cnt],
+                 " test auc:",result$test.auc[cnt]))
     # jjj
     cnt = cnt+1
   }

@@ -23,7 +23,7 @@ filtertypes =  c(paste0("d",seq(2,20,by=4)), # Daubechies
 # other parameters
 sf = 128
 n.levels = 7
-siglen = 15*sf
+siglen = 10*sf
 # filenames
 files = list.files(datadir,include.dirs=TRUE,full.names = TRUE)
 files_short = list.files(datadir,include.dirs=FALSE,full.names = FALSE)
@@ -35,13 +35,18 @@ getid = function(x) {
 }
 getprotocol = function(x) return(unlist(strsplit(x,"_"))[1])
 getdiagnosis = function(x) {
-  tmp = unlist(strsplit(x,"_"))[4]
+  tmp = unlist(strsplit(x,"_"))[5]
   tmp2 = unlist(strsplit(tmp,"gro"))[2]
   return(unlist(strsplit(tmp2,"[.]"))[1])
 }
 getdur = function(x) {
   tmp = unlist(strsplit(x,"_"))[3]
   tmp2 = unlist(strsplit(tmp,"dur"))[2]
+  return(as.numeric(tmp2))
+}
+getepoch = function(x) {
+  tmp = unlist(strsplit(x,"_"))[4]
+  tmp2 = unlist(strsplit(tmp,"epoch"))[2]
   return(as.numeric(tmp2))
 }
 bf.fil = function(x,sf) { # low-pass filter
@@ -57,7 +62,8 @@ bf.fil = function(x,sf) { # low-pass filter
 metadata = data.frame(id = as.numeric(sapply(files_short,getid)),
                       protocol = as.character(sapply(files_short,getprotocol)),
                       diagnosis =  as.character(sapply(files_short,getdiagnosis)),
-                      dur = as.numeric(sapply(files_short,getdur)),row.names=files_short)
+                      dur = as.numeric(sapply(files_short,getdur)),
+                      epoch = as.numeric(sapply(files_short,getepoch)),row.names=files_short)
 metadata = metadata[order(metadata$id),]
 # initialize other parameters:
 S = c() #object in which features will be collected
