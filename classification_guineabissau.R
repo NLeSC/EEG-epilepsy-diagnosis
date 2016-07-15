@@ -3,7 +3,7 @@ graphics.off()
 setwd("/home/vincent/utrecht/EEG-epilepsy-diagnosis")
 load(file="data/features_ginneabissau.RData")
 
-LOG = read.csv("/media/windows-share/EEGs_Guinea-Bissau_np/log.csv",stringsAsFactors = FALSE)
+LOG = read.csv("log.csv",stringsAsFactors = FALSE)
 
 # make sure that both LAB and DAT have matching row order
 getid = function(x) {
@@ -57,12 +57,11 @@ val_fnames = LOG[which(LOG$set == "valid" & LOG$dur == 10 & LOG$protocol == look
 vali = which((rownames(LAB) %in% val_fnames) == TRUE)
 LABval = LAB[vali,]
 DATval = DAT[vali,]
-
 # define models to be trained
 uv2 = unique(v2)
 uv3 = unique(v3)
 uv4 = c("rf","glm")
-Ncases = length(uv2) * length(uv4) #* length(uv3) 
+Ncases = length(uv2) #* length(uv4) #* length(uv3) 
 result = data.frame(wavelet=rep(" ",Ncases),
                     feature=rep(" ",Ncases),
                     model=rep(" ",Ncases),
@@ -70,6 +69,7 @@ result = data.frame(wavelet=rep(" ",Ncases),
 # DAToriginal = DAT
 DATtest$diagn = as.factor(LABtest$diagnosis)
 DATtrain$diagn = as.factor(LABtrain$diagnosis)
+DATval$diagn = as.factor(LABval$diagnosis)
 cnt = 1
 library(caret)
 require(psych)
@@ -78,9 +78,9 @@ library(pROC)
 for (wtype in uv2) {
   # for (ftype in uv3) {
   
-  ctrl = trainControl(method = "LOOCV",number=3,repeats=1) #"repeatedcv"
+  ctrl = trainControl(method = "none") #"repeatedcv",number=3,repeats=1
   # ,  savePredictions = TRUE,classProbs=TRUE,summaryFunction = twoClassSummary
-  for (modeli in c("rf","glm")) {
+  for (modeli in c("rf")) { #,"glm"
     print(paste0(wtype," ",modeli))
     #============================================================
     # training
@@ -91,10 +91,19 @@ for (wtype in uv2) {
     } else {
       m_rf = train(diagn ~ .,  data=DATtrain[,c(which(v2==wtype),ncol(DATtrain))], method="glm", metric="Kappa",family="binomial")
     }
-    result$training.kappa[cnt] = round(max(m_rf$results$Kappa),digits=3)
+    # result$training.kappa[cnt] = round(max(m_rf$results$Kappa),digits=3)
     #===========================================================
     # TO DO: implement hyperparameter optimization using the validation set
-    
+    # testing
+    pred_val = predict(m_rf, DATval[,1:(ncol(DATtest)-1)],type="prob")
+    result.roc <- roc(DATval$diagn, pred_val$Control)
+    aucval = result.roc$auc
+    result.coords <- coords(result.roc, "best", best.method="closest.topleft", ret=c("threshold", "accuracy"))
+    result$val.auc[cnt] = round(aucval,digits=3)
+    pred_val_cat = rep("Control",nrow(pred_val))
+    pred_val_cat[pred_val$Epilepsy > 0.500] = "Epilepsy"
+    confmat = table(pred_val_cat,LABval$diagnosis)
+    result$val.kappa[cnt] = round(cohen.kappa(x=confmat)$kappa,digits=3)
     #============================================================
     # testing
     pred_test = predict(m_rf, DATtest[,1:(ncol(DATtest)-1)],type="prob")
@@ -105,8 +114,6 @@ for (wtype in uv2) {
     auctest = result.roc$auc
     result.coords <- coords(result.roc, "best", best.method="closest.topleft", ret=c("threshold", "accuracy"))
     result$test.auc[cnt] = round(auctest,digits=3)
-    #     result$test.threshold[cnt] = round(result.coords[1],digits=3)
-    #     result$test.accuracy[cnt] = round(result.coords[2],digits=3)
     # Kappa statistic as an alternative performance metric:
     pred_test_cat = rep("Control",nrow(pred_test))
     pred_test_cat[pred_test$Epilepsy > 0.500] = "Epilepsy"
@@ -116,14 +123,14 @@ for (wtype in uv2) {
     # keep track of wavelettype and model
     result$wavelet[cnt] = wtype
     result$model[cnt] = modeli
-    print(paste0(modeli," ",wtype," training K:",result$training.kappa[cnt],
+    print(paste0(modeli," ",wtype," validation K:",result$val.kappa[cnt],
                  " test K:",result$test.kappa[cnt],
                  " test auc:",result$test.auc[cnt]))
     # jjj
     cnt = cnt+1
   }
 }
-result = result[with(result,order(training.kappa)),]
+result = result[with(result,order(val.kappa)),]
 # result$kappa = round(result$kappa,digits=3)
 # result$trainingkappa  = round(result$trainingkappa,digits=3)
 write.csv(result,file="data/result_guineabissau.csv")
