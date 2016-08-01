@@ -23,7 +23,7 @@ filtertypes =  c(paste0("d",seq(2,20,by=4)), # Daubechies
 # other parameters
 sf = 128
 n.levels = 7
-siglen = 10*sf
+siglen = 4*sf
 # filenames
 files = list.files(datadir,include.dirs=TRUE,full.names = TRUE)
 files_short = list.files(datadir,include.dirs=FALSE,full.names = FALSE)
@@ -132,4 +132,4 @@ for (i in 1:length(files_short)) { #unique id numbers
 }
 DAT = S
 LAB = metadata[which(rownames(metadata) %in% S$fnames == TRUE),]
-save(DAT,LAB,labels,file=paste0("data/features_ginneabissau.RData"))
+save(DAT,LAB,labels,file=paste0("data/features_ginneabissau_",siglen/sf,".RData"))
