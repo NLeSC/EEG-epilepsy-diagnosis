@@ -6,8 +6,12 @@ library(psych)
 library(pROC)
 
 setwd("/home/vincent/utrecht/EEG-epilepsy-diagnosis")
-# load(file="data/features_ginneabissau_4.RData")
-load(file="data/features_ginneabissau_10.RData")
+load(file="data/features_ginneabissau_4.RData"); logdur = 4
+# load(file="data/features_ginneabissau_10.RData"); logdur = 10
+
+lookatprotocol = "open"
+usePCA = TRUE
+
 
 LOG = read.csv("log.csv",stringsAsFactors = FALSE)
 
@@ -73,19 +77,19 @@ modeldict = data.frame(v2 = sapply(varnames,FUN = getwavelettype),
                        v3 = sapply(varnames,FUN = getfeaturetype),
                        v5 = sapply(varnames,FUN = getwaveletlevel),
                        v6 = sapply(varnames,FUN = getaggtype),stringsAsFactors=FALSE)
-lookatprotocol = "closed"
+
 # training set
-train_fnames = LOG[which(LOG$set == "train" & LOG$dur == 10 & LOG$protocol == lookatprotocol),]$filename
+train_fnames = LOG[which(LOG$set == "train" & LOG$dur == logdur & LOG$protocol == lookatprotocol),]$filename
 traini = which((rownames(LAB) %in% train_fnames) == TRUE)
 LABtrain = LAB[traini,]
 DATtrain = DAT[traini,]
 # test set
-test_fnames = LOG[which(LOG$set == "test" & LOG$dur == 10 & LOG$protocol == lookatprotocol),]$filename
+test_fnames = LOG[which(LOG$set == "test" & LOG$dur == logdur & LOG$protocol == lookatprotocol),]$filename
 testi = which((rownames(LAB) %in% test_fnames) == TRUE)
 LABtest = LAB[testi,]
 DATtest = DAT[testi,]
 # validation set
-val_fnames = LOG[which(LOG$set == "valid" & LOG$dur == 10 & LOG$protocol == lookatprotocol),]$filename
+val_fnames = LOG[which(LOG$set == "valid" & LOG$dur == logdur & LOG$protocol == lookatprotocol),]$filename
 vali = which((rownames(LAB) %in% val_fnames) == TRUE)
 LABval = LAB[vali,]
 DATval = DAT[vali,]
@@ -93,7 +97,6 @@ DATtest$diagn = as.factor(LABtest$diagnosis)
 DATtrain$diagn = as.factor(LABtrain$diagnosis)
 DATval$diagn = as.factor(LABval$diagnosis)
 
-usePCA = FALSE
 
 # First select best possible features set
 testpart = c("wavelet") #,"features","aggregationtype") #,"waveletlevel"
@@ -122,7 +125,7 @@ for (testparti in testpart) {
     fes = which(allvalues==valueseval[jj])
     if (usePCA == TRUE) { # maybe need to replace this with lasso PCA??
       #run pca on training data
-      pcatr = prcomp(x=DATtrain[,fes],center=TRUE,scale=TRUE, retx=TRUE,tol=0.05) #,na.action=na.omit
+      pcatr = prcomp(x=DATtrain[,fes],retx=TRUE,tol=0.05) #,na.action=na.omit, center=TRUE,scale=TRUE, 
       # now trim it to only have PCAs that explain > 80% of the data
       cumimportance = summary(pcatr)$importance[3,]
       cut = which(cumimportance > 0.7)[1]
@@ -146,7 +149,7 @@ for (testparti in testpart) {
     #========================================================
     # now use factors for random forest
     # set training paramerters
-    ctrl = trainControl(method = "repeatedcv",number=10,repeats=3,search="random")
+    ctrl = trainControl(method = "repeatedcv",number=10,repeats=1,search="random")
     # train on training set
     m_rf = train(y=DATtrain$diagn,x=train_factors,
                  method="rf",metric="Kappa",trControl=ctrl,tuneLength=10) # train 10 different mtry values using random search
@@ -199,33 +202,36 @@ for (testparti in testpart) {
                  " validation auc: ",result$val.auc[cnt]))
     cnt = cnt+1
   }
-  if (usePCA == FALSE) {
-    # select all models that are within 0.1 Kappa from the best model
-    result = result[with(result,order(val.kappa)),]
-    if (testparti == "wavelet") { # select only best wavelet
-      bestmodels = result$model[which(result$val.kappa == max(result$val.kappa))[1]]
-    } else {
-      bestmodels = result$model[which(result$val.kappa > (max(result$val.kappa) - 0.2))]
-    }
-    if (testparti == "wavelet") {
-      sel = which(modeldict$v2 %in% bestmodels == TRUE)
-    } else if (testparti == "features") {
-      sel = which(modeldict$v3 %in% bestmodels == TRUE)
-    } else if (testparti == "waveletlevel") {
-      sel = which(modeldict$v5 %in% bestmodels == TRUE)
-    } else if (testparti == "aggregationtype") {
-      sel = which(modeldict$v6 %in% bestmodels == TRUE)
-    }
-    modeldict = modeldict[sel,]
-    sel = c(sel,ncol(DATtrain))
-    DATtrain = DATtrain[,sel]
-    DATval = DATval[,sel]
-    DATtest = DATtest[,sel]
-  }
+  result = result[with(result,order(val.kappa)),]
+  # Code to iteratively drop out models
+#   if (usePCA == FALSE) {
+#     # select all models that are within 0.1 Kappa from the best model
+#     if (testparti == "wavelet") { # select only best wavelet
+#       bestmodels = result$model[which(result$val.kappa == max(result$val.kappa))[1]]
+#     } else {
+#       bestmodels = result$model[which(result$val.kappa > (max(result$val.kappa) - 0.2))]
+#     }
+#     if (testparti == "wavelet") {
+#       sel = which(modeldict$v2 %in% bestmodels == TRUE)
+#     } else if (testparti == "features") {
+#       sel = which(modeldict$v3 %in% bestmodels == TRUE)
+#     } else if (testparti == "waveletlevel") {
+#       sel = which(modeldict$v5 %in% bestmodels == TRUE)
+#     } else if (testparti == "aggregationtype") {
+#       sel = which(modeldict$v6 %in% bestmodels == TRUE)
+#     }
+#     modeldict = modeldict[sel,]
+#     sel = c(sel,ncol(DATtrain))
+#     DATtrain = DATtrain[,sel]
+#     DATval = DATval[,sel]
+#     DATtest = DATtest[,sel]
+#   }
   
   print(result)
   # rm(result)
 }
+
+print(usePCA)
 
 
 # Now do random search to select best possible model:
