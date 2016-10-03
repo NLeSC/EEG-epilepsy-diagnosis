@@ -22,7 +22,7 @@ filtertypes =  c(paste0("d",seq(2,20,by=2)), # Daubechies
 # other parameters
 sf = 128
 n.levels = 7
-siglen = 30*sf
+siglen = 10*sf
 # filenames
 files = list.files(datadir,include.dirs=TRUE,full.names = TRUE)
 files_short = list.files(datadir,include.dirs=FALSE,full.names = FALSE)
@@ -34,7 +34,7 @@ getid = function(x) {
 }
 getprotocol = function(x) return(unlist(strsplit(x,"_"))[1])
 getdiagnosis = function(x) {
-  tmp = unlist(strsplit(x,"_"))[4]
+  tmp = unlist(strsplit(x,"_"))[5]
   tmp2 = unlist(strsplit(tmp,"gro"))[2]
   return(unlist(strsplit(tmp2,"[.]"))[1])
 }
@@ -55,7 +55,7 @@ print(paste("filtertypes: ",paste(filtertypes,collapse=" ")))
 print(paste("N files: ",paste(length(files_short))))
 
 count = rep(0,4)
-
+pdf("data/visualisation_gineabissau.pdf")
 for (i in 1:length(files_short)) { #unique id numbers #length(files_short)
   if (cnt == 4) { # print progress of processing
     prog = round((i/length(files_short)) * 1000)/ 10
@@ -82,26 +82,31 @@ for (i in 1:length(files_short)) { #unique id numbers #length(files_short)
     if (info$diagnosis == "Control" & info$protocol == "eyesclosed") {
       coll =  "black"
       count[1] = count[1] + 1
-      if (count[1] > 2) enoughdata = TRUE
+      if (count[1] > 3) enoughdata = TRUE
     } else if (info$diagnosis == "Epilepsy" & info$protocol == "eyesclosed") {
-      coll = "grey"
+      # coll =  "black" #coll = "grey"
+      coll = "blue" #coll =  "black"
       count[2] = count[2] + 1
-      if (count[2] > 2) enoughdata = TRUE
+      if (count[2] > 3) enoughdata = TRUE
     } else if (info$diagnosis == "Control" & info$protocol == "eyesopen") {
-      coll = "darkblue"
+      coll =  "black" #coll = "darkblue"
       count[3] = count[3] + 1
-      if (count[3] > 2) enoughdata = TRUE
+      if (count[3] > 3) enoughdata = TRUE
     } else if (info$diagnosis == "Epilepsy" & info$protocol == "eyesopen") {
-      coll = "blue"
+      coll = "blue" #coll =  "black"
       count[4] = count[4] + 1
-      if (count[4] > 2) enoughdata = TRUE
+      if (count[4] > 3) enoughdata = TRUE
     }
     if (enoughdata == FALSE) {
-      x11()
+      # x11()
       par(mfrow=c(7,2),oma=c(1,1,1,1),mar=c(1,1,1,1))
       psd = c()
       for (j in 1:14) {
-        plot(myfun(x=data[1:t2,j]),type="l",ylim=yrange,col=coll)
+        if (j == 1) {
+          plot(myfun(x=data[1:t2,j]),type="l",ylim=yrange,col=coll,main=paste0(info$diagnosis," ",info$protocol))
+        } else {
+          plot(myfun(x=data[1:t2,j]),type="l",ylim=yrange,col=coll)
+        }
         # plot(data[1:t2,j],type="l",ylim=yrange,col=coll)
         #           sp = spectrum(data[1:t2,j],plot=TRUE,col=coll)
         #           psd = rbind(psd,sp$spec)
@@ -110,4 +115,5 @@ for (i in 1:length(files_short)) { #unique id numbers #length(files_short)
     enoughdata = FALSE
   }
 }
+dev.off()
 
