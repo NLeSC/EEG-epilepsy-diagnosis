@@ -10,7 +10,7 @@ load(file="data/features_ginneabissau_4.RData"); logdur = 4
 # load(file="data/features_ginneabissau_10.RData"); logdur = 10
 
 lookatprotocol = "open"
-usePCA = TRUE
+usePCA = FALSE
 
 
 LOG = read.csv("log.csv",stringsAsFactors = FALSE)
@@ -149,15 +149,28 @@ for (testparti in testpart) {
     #========================================================
     # now use factors for random forest
     # set training paramerters
+    # ctrl = trainControl(method = "none",number=10,repeats=10,search="random")
     ctrl = trainControl(method = "repeatedcv",number=10,repeats=1,search="random")
+    # ctrl = trainControl(method = "repeatedcv",number=10,repeats=3,search="grid")
     # train on training set
+    
+    
+    # Random Search
+    
     m_rf = train(y=DATtrain$diagn,x=train_factors,
-                 method="rf",metric="Kappa",trControl=ctrl,tuneLength=10) # train 10 different mtry values using random search
+                 method="rf",metric="Kappa",trControl=ctrl,tuneLength=10) # # train 10 different mtry values using random search
+  
+    # TO DO: Turn of tuneLength and mtr search when using PCA???
+    
+    #     print("show model:")
+#     print(m_rf)
+#     jjj
     #===========================================================
     # apply to validation set
     pred_val = predict(m_rf,val_factors,type="prob")
     result.roc <- roc(DATval$diagn, pred_val$Control)
     aucval = result.roc$auc
+    jjj
     result.coords <- coords(result.roc, "best", best.method="closest.topleft", ret=c("threshold", "accuracy"))
     pred_val_cat = rep("Control",nrow(pred_val))
     pred_val_cat[pred_val$Epilepsy > 0.500] = "Epilepsy"
