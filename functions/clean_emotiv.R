@@ -1,4 +1,5 @@
 clean_emotiv = function(datadir,metadatafile,outputdir,sf,gyrothreshold,mindur,knownerrors,protocoltimes,referencegroup,condition_start_closed) {
+  print("load and clean data")
   #--------------------------------------------------------
   # subfunctions
   getfileinfo = function(datadir) {
@@ -80,7 +81,7 @@ clean_emotiv = function(datadir,metadatafile,outputdir,sf,gyrothreshold,mindur,k
   print(paste("N unique ids: ",paste(length(uid))))
   for (i in uid) { # loop over unique id numbers derived from eeg files
     ind2 = which(uid == i)  #index in the unique eegdata ids
-    if (cnt == 5) {   # print progress after every 5 files
+    if (cnt == 10) {   # print progress after every 5 files
       prog = round((which(uid == i)/length(uid)) * 1000)/ 10
       print(paste0(prog," %"))
       cnt = 0
