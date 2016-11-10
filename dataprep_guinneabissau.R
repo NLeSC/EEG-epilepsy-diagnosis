@@ -7,10 +7,10 @@ funcfiles = list.files("functions",include.dirs=TRUE,full.names = TRUE)
 for (i in funcfiles) {
   source(i)
 }
-doclean = FALSE
+doclean = FALSE # only needs to be done once, because it is not depenedent on epochlength
 extractfeature = TRUE
 sf = 128 #sample frequency
-epochlength = 4 # in seconds
+epochlength = 10 # in seconds
 if (doclean == TRUE) {
   datadir =  "/media/windows-share/EEGs_Guinea-Bissau__16-06-2016" #"data/eeg"
   metadatafile = "/media/windows-share/subject.id_with_meta-info__anonymized.csv"

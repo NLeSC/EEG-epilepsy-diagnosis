@@ -33,6 +33,7 @@ clean_emotiv = function(datadir,metadatafile,outputdir,sf,gyrothreshold,mindur,k
     # so 30 units on a scale of >1000 would seem to at least ommit the extreme movement
     eegdata$quality[which(gyrox > gyrothreshold | gyroy > gyrothreshold | minqc < 3)] = 0 # data quality 0 is defined as poor
     #======================================================================
+    
     ikne = which(knownerrors.df[,1] == i)
     if (length(ikne) > 0) {
       for (j in 1:length(ikne)) {
@@ -40,7 +41,21 @@ clean_emotiv = function(datadir,metadatafile,outputdir,sf,gyrothreshold,mindur,k
         tmp2 = tmp1[1] * 60 + tmp1[2]
         tmp3 = as.numeric(unlist(strsplit(knownerrors.df[ikne[j],3],":")))
         tmp4 = tmp3[1] * 60 + tmp3[2]
-        eegdata$quality[(tmp2*sf):(tmp4*sf)] = 0 # data quality 0 is defined as poor
+        if (((tmp4*sf)-(tmp2*sf)+1) > nrow(eegdata)) {
+          print(tmp2)
+          print(tmp4)
+          print(nrow(eegdata))
+        }
+        starti = tmp2*sf
+        endi = tmp4*sf
+        if (endi > nrow(eegdata)) endi = nrow(eegdata)
+        if (starti > endi) {
+          print(knownerrors.df[ikne[j],])
+          warning(paste0("impossible start time "))
+        }
+#         print(paste0(length(eegdata$quality)," ",eegdata$quality[1]," ",knownerrors.df[ikne[j],1]," ",
+#                      knownerrors.df[ikne[j],2]," ",knownerrors.df[ikne[j],3]))
+        eegdata$quality[starti:endi] = 0 # data quality 0 is defined as poor
       }
     }
     return(eegdata)

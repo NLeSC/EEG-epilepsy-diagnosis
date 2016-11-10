@@ -1,27 +1,34 @@
-split_data = function(LAB,DAT,logfile = "log_guinneabissau.csv",proto_i= "eyesopen",split=c(20,20),uselog = TRUE,logdur=4) {
+split_data = function(LAB,DAT,logfile = "log_guinneabissau.csv",proto_i= "eyesopen",split=c(20,20),
+                      uselog = TRUE,logdur=4,useallepoch=FALSE) {
   
   split_data = function(LAB,DAT,proto_i,split=c(20,20)) {
     ids = c()
+    if (useallepoch == TRUE) {
+      ep = LAB$epoch >= 1
+    } else {
+      ep = LAB$epoch == 1
+    }
     for (set in 1:2) {
       for (diag_i in c("Control","Epilepsy")) {
-        x = LAB[which(LAB$epoch == 1 & LAB$protocol == proto_i & LAB$diagnosis == diag_i & 
+        x = LAB[which(ep & LAB$protocol == proto_i & LAB$diagnosis == diag_i & 
                         (LAB$id %in% ids) == FALSE),]$id
+        set.seed(300)
         ids = c(ids,sample(x,size=round(split[set]/2)))
       }
       if (set == 1) { # validation
-        LABval = LAB[which(LAB$epoch == 1 & LAB$protocol == proto_i & (LAB$id %in% ids)==TRUE),]
+        LABval = LAB[which(ep & LAB$protocol == proto_i & (LAB$id %in% ids)==TRUE),]
         DATval = DAT[which(DAT$fnames %in% rownames(LABval)  == TRUE),]
         ids_val = ids
       } else { # test
         ids = ids[which(ids %in% ids_val == FALSE)]
-        LABtest = LAB[which(LAB$epoch == 1 & LAB$protocol == proto_i & (LAB$id %in% ids)==TRUE),]
+        LABtest = LAB[which(ep == 1 & LAB$protocol == proto_i & (LAB$id %in% ids)==TRUE),]
         DATtest = DAT[which(DAT$fnames %in% rownames(LABtest)  == TRUE),]
         ids_test = ids
       }
     }
     # training
     # ids = ids[which(ids %in% ids_test == FALSE)]
-    LABtrain = LAB[which(LAB$epoch == 1 & LAB$protocol == proto_i & (LAB$id %in% ids_val)==FALSE
+    LABtrain = LAB[which(ep & LAB$protocol == proto_i & (LAB$id %in% ids_val)==FALSE
                          & (LAB$id %in% ids_test)==FALSE),]
     DATtrain= DAT[which(DAT$fnames %in% rownames(LABtrain)  == TRUE),]
     invisible(list(LABval=LABval,LABtest=LABtest,LABtrain=LABtrain,DATval=DATval,DATtest=DATtest,DATtrain=DATtrain))
@@ -65,10 +72,10 @@ split_data = function(LAB,DAT,logfile = "log_guinneabissau.csv",proto_i= "eyesop
   
   
   if (uselog == TRUE) {
-    P = split_data_bypython(logfile,proto_i,logdur)
+    P = split_data_bypython(logfile,proto_i,logdur,split,logdur)
     LABval=P$LABval;LABtest=P$LABtest;LABtrain=P$LABtrain;DATval=P$DATval;DATtest=P$DATtest;DATtrain=P$DATtrain
   } else {
-    P = split_data(LAB,DAT,proto_i,split=c(20,20)) #"eyesopen" #,"eyesclosed"
+    P = split_data(LAB,DAT,proto_i,split=split) #"eyesopen" #,"eyesclosed"
     LABval=P$LABval;LABtest=P$LABtest;LABtrain=P$LABtrain;DATval=P$DATval;DATtest=P$DATtest;DATtrain=P$DATtrain
   }
   DATtest$diagn = as.factor(LABtest$diagnosis)

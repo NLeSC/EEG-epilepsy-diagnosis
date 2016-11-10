@@ -25,13 +25,17 @@ train_model = function(DATtrain,LABtrain,DATval,LABval,modeldict) {
       #===========================================================
       # set training paramerters
       # ctrl = trainControl(method = "none",number=10,repeats=10,search="random")
-      ctrl = trainControl(method = "repeatedcv",number=10,repeats=1,search="random")
+      ctrl = trainControl(method = "repeatedcv",number=10,repeats=1,search="random",classProbs = TRUE, summaryFunction = twoClassSummary)
       # ctrl = trainControl(method = "repeatedcv",number=10,repeats=3,search="grid")
       #===========================================================
       # train on training set
+
       set.seed(300)
-      m_rf = train(y=DATtrain$diagn,x=train_factors,
-                   method="rf",metric="Kappa",trControl=ctrl,tuneLength=10) # # train 10 different mtry values using random search
+      seeds <- vector(mode = "list", length = 10)#
+      for(i in 1:10) seeds[[i]] <- 300
+      m_rf = train(y=DATtrain$diagn,x=train_factors,seeds=seeds,
+                   method="rf",trControl=ctrl,tuneLength=10,metric = "Sens") # # train 10 different mtry values using random search
+      #metric="Kappa"
       #===========================================================
       # apply to validation set
       pred_val = predict(m_rf,val_factors,type="prob")
@@ -41,6 +45,7 @@ train_model = function(DATtrain,LABtrain,DATval,LABval,modeldict) {
       pred_val_cat = rep("Control",nrow(pred_val))
       pred_val_cat[pred_val$Epilepsy > 0.500] = "Epilepsy"
       confmat = create_confmatrix(pred_val_cat,LABval$diagnosis)
+      
       result$val.confmatrix[cnt] = paste0(confmat[1,1:2],"_",confmat[2,1:2],collapse="_")
       result$val.auc[cnt] = round(aucval,digits=3)
       result$val.kappa[cnt] = round(cohen.kappa(x=confmat)$kappa,digits=3)
@@ -58,7 +63,7 @@ train_model = function(DATtrain,LABtrain,DATval,LABval,modeldict) {
     din = as.factor(c(as.character(DATtrain$diagn),as.character(DATval$diagn))) #y
     set.seed(300)
     best_model_randomforest = train(y=din,x=train_factors,
-                                    method="rf",metric="Kappa",trControl=ctrl,tuneLength=10) # train 10 different mtry values using random search
+                                    method="rf",metric="Sens",trControl=ctrl,tuneLength=10) # train 10 different mtry values using random search
   }
   invisible(list(result=result,best_model_randomforest=best_model_randomforest,fes=fes))
 }

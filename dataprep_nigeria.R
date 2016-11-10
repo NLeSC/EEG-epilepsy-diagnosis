@@ -1,24 +1,32 @@
 rm(list=ls())
 graphics.off()
-setwd("/home/vincent/utrecht/EEG-epilepsy-diagnosis")
-source("clean_emotiv.R")
-source("extract_features.R")
 library(wavelets)
 library(pracma)
+setwd("/home/vincent/utrecht/EEG-epilepsy-diagnosis")
+funcfiles = list.files("functions",include.dirs=TRUE,full.names = TRUE)
+for (i in funcfiles) {
+  source(i)
+}
 
-doclean = TRUE
+
+doclean = FALSE
 extractfeature = TRUE
 sf = 128 #sample frequency
-epochlength = 4 # in seconds
+epochlength = 10 # in seconds
 if (doclean == TRUE) {
   datadir =  "/media/windows-share/EEGs_Nigeria" #"data/eeg"
   metadatafile = "/media/windows-share/merged-meta-data_nigeria.csv"
   outputdir =  "/media/windows-share/EEGs_Nigeria_cleaned" 
   gyrothreshold = 30 #gyro unit deviations from the median that are not tolerated
-  mindur = 4 # minimum duration in seconds
+  mindur = 4 # minimum duration in minutes
   # define known errors based on Research Remarks (this is hardcoded, but could be extracted from a file in the future)
-  knownerrors = list(c(84,"0:40","0:50"), # => id, starttime, endtime of the problematic period
-                     c(91,"0:40","0:50")) # if there are more periods per id then use new entry
+  knownerrors = list(c(84,"0:30","0:50"), # => id, starttime, endtime of the problematic period
+                     c(91,"0:30","0:50"), # if there are more periods per id then use new entry
+                     c(104,"0:30","0:55"), c(104,"1:02","1:13"), c(105,"2:30","2:55"), c(108,"2:30","2:52"),
+                     c(134,"2:30","2:47"), c(500,"2:30","2:46"), c(508,"0:30","4:30"), c(511,"2:30","2:47"),
+                     c(515,"0:30","4:30"),c(519,"2:30","3:00"), c(526,"2:30","4:30"), c(534,"2:30","2:47"),
+                     c(569,"2:30","3:10"), c(580,"2:45","4:30"), c(590,"2:30","2:50"), c(599,"2:30","2:50"),
+                     c(622,"0:30","2:30"),c(623,"2:30","2:50"), c(626,"2:15","2:30"))
   referencegroup = "control"
   condition_start_closed = "closed"
   protocolvariable = "first_condition"

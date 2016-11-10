@@ -6,16 +6,21 @@ library(psych)
 library(pROC)
 
 setwd("/home/vincent/utrecht/EEG-epilepsy-diagnosis")
-# load(file="data/features_ginneabissau_4.RData"); logdur = 4
-load(file="data/features_ginneabissau_10.RData"); logdur = 10
+# load(file="data/features_nigeria_4.RData"); logdur = 4
+load(file="data/features_nigeria_10.RData"); logdur = 10
 funcfiles = list.files("functions",include.dirs=TRUE,full.names = TRUE)
 for (i in funcfiles) {
   source(i)
 }
 
-proto_i = "eyesclosed" #"eyesopen" "open" #closed
-logfile = "data/log_guinneabissau.csv" # not used when uselog = FALSE
+LAB$diagnosis = as.character(LAB$diagnosis)
+LAB$diagnosis[which(LAB$diagnosis == "control")] = "Control"
+LAB$diagnosis[which(LAB$diagnosis == "epilepsy")] = "Epilepsy"
+LAB$diagnosis = as.factor(LAB$diagnosis)
 
+# proto_i = "eyesclosed"
+proto_i = "eyesopen" # "open" #closed
+logfile = "data/log_guinneabissau.csv" # not used when uselog = FALSE
 #===============================================================
 # split data in training, validation and test set
 P = split_data(LAB,DAT,logfile = logfile,proto_i=proto_i,split=c(20,20),uselog = FALSE,logdur=logdur,useallepoch=FALSE)
@@ -25,17 +30,21 @@ LABval=P$LABval;LABtest=P$LABtest;LABtrain=P$LABtrain;DATval=P$DATval;DATtest=P$
 modeldict = create_modeldict(DAT)
 #===============================================================
 # train and evaluate all models
-trainingresults = train_model(DATtrain,LABtrain,DATval,LABval,modeldict)
-best_model = trainingresults$best_model_randomforest
-modelcomparison = trainingresults$result
-fes = trainingresults$fes
+# trainingresults = train_model(DATtrain,LABtrain,DATval,LABval,modeldict)
+# best_model = trainingresults$best_model_randomforest
+# modelcomparison = trainingresults$result
+# fes = trainingresults$fes
 
 # Save best model
 bestmodelfile = paste0("data/bestmodel_",proto_i,"_dur",logdur,".RData")
-save(best_model,fes,file=bestmodelfile)
-rm(best_model,fes)
+# save(best_model,fes,file=bestmodelfile)
+# rm(best_model,fes)
 # Reload best model
 load(bestmodelfile)
+
+# all data for testing:
+LABtest = rbind(LABtrain,LABval,LABtest)
+DATtest = rbind(DATtrain,DATval,DATtest)
 
 #===============================================================
 # evaluate on test set
@@ -55,18 +64,13 @@ test.auc = round(auctest,digits=3)
 test.kappa = round(cohen.kappa(x=confmat)$kappa,digits=3)
 test.acc = round(sum(diag(confmat)) / sum(confmat),digits=3)
 print(paste0(proto_i," acc ",test.acc," kappa ",test.kappa," auc ",test.auc," ",test.confmatrix))
+
+
 #======================================
 # Results:
-
-# TO DO: optimize sensitivity and report on sensitivity (V)
-# Check that sensitivity actualy optimizes the detection of Epilepsy
-# TO DO: Extract more data by splitting up epochs, this may benefit the training phase
-# TO DO: Experiment with majority vote
-
 # eyes closed, 10 second epoch
-# 1epoch per person: "eyesclosed acc 0.7 kappa 0.4 auc 0.77 7_3_3_7"
-
+# "eyesclosed acc 0.446 kappa 0 auc 0.502 0_134_0_108"
+# "eyesclosed acc 0.399 kappa 0 auc 0.573 0_86_0_57"
 # eyes open, 10 second epoch
-# "eyesopen acc 0.8 kappa 0.6 auc 0.91 9_1_3_7"
-
-
+# "eyesopen acc 0.416 kappa 0 auc 0.517 0_146_0_104"
+# "eyesopen acc 0.358 kappa 0 auc 0.491 0_88_0_49"
