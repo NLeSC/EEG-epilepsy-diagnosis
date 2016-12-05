@@ -3,7 +3,6 @@ extract_features = function(datadir,sf,n.levels,filtertypes,epochlength){
   #subfunctions
   
   getfeatures = function(x,fns) {
-    
     #--------------------------------------------------------
     # define generic function for feature extraction
     # Note: approx_entropy from pracma package is very slow
@@ -106,6 +105,7 @@ extract_features = function(datadir,sf,n.levels,filtertypes,epochlength){
   print(paste("filtertypes: ",paste(filtertypes,collapse=" ")))
   print(paste("N files: ",paste(length(files_short))))
   for (i in 1:length(files_short)) { #unique id numbers
+    print(i)
     if (cnt == 10) { # print progress of processing
       prog = round((i/length(files_short)) * 1000)/ 10
       print(paste0(prog," %"))
@@ -130,12 +130,38 @@ extract_features = function(datadir,sf,n.levels,filtertypes,epochlength){
           out = mra(x,filter=firi, boundary="periodic",n.levels=n.levels)
           return(unlist(c(out@D)))
         }
-        wtdata = t(apply(sc,1,mymra))
-        wtdata <- as.data.frame(wtdata)
+        wtdata = t(apply(sc,1,mymra)) # apply multi-resolution analyses
+        wtdata <- as.data.frame(wtdata) # these are the wavelets
         bands = c(rep(1:n.levels,each=siglen))  
         temp = as.data.frame(t(wtdata))
         temp$bands = bands
-        for (featuresi in fn) { # features
+        
+        #----------------------------------------
+        # Here we could possibly also extract connectivity features:
+        # Connectivity on raw data:
+        plimatrix = phaselagindex(EEGdata=t(sc),frequency=128)
+        pli_features = data.frame(meanpli=mean(plimatrix),sdpli=sd(plimatrix))
+        names(pli_features) = paste0(names(pli_features),".raw.notapplicable")
+        if (length(G) == 0) {
+          G = pli_features
+        } else {
+          G = cbind(G,pli_features)
+        }
+        # Connectivity on wavelets:
+        for (ubi in unique(bands)) {
+          # print(dim(temp[temp$bands==ubi,which(names(temp)!= "bands")]))
+          plimatrix = phaselagindex(EEGdata=temp[temp$bands==ubi,which(names(temp)!= "bands")],frequency=128)
+          pli_features = data.frame(meanpli=mean(plimatrix),sdpli=sd(plimatrix))
+          names(pli_features) = paste0(names(pli_features),".",firi,".",n.levels)
+          if (length(G) == 0) {
+            G = pli_features
+          } else {
+            G = cbind(G,pli_features)
+          }
+        }
+        
+        # Other features (based on wavelets)
+        for (featuresi in fn) { # features to summarize wavelets
           A = getfeatures(x=temp,fns=featuresi)
           if (ncol(A) > 14) A = A[,2:15]
           tmp = as.numeric(apply(A,1,min)) # minimum features value across channels
@@ -151,6 +177,7 @@ extract_features = function(datadir,sf,n.levels,filtertypes,epochlength){
                             paste0(1:n.levels,".",featuresi,".",firi,".max"),
                             paste0(1:n.levels,".",featuresi,".",firi,".mean"),
                             paste0(1:n.levels,".",featuresi,".",firi,".sd")) # add labels and merge
+          
           if (length(G) == 0) {
             G = tmp4
           } else {
@@ -161,6 +188,7 @@ extract_features = function(datadir,sf,n.levels,filtertypes,epochlength){
       }
       G$fnames = files_short[i]
       S = rbind(S,G)
+      
       rm(G)
     }
     

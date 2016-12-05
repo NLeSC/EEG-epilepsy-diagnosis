@@ -55,6 +55,7 @@ if (extractfeature == TRUE) {
   # filtertypes =  c("d4") # Daubechies
   n.levels = 7
   ef = extract_features(datadir,sf,n.levels,filtertypes,epochlength)
+  kkk
   DAT = ef$DAT
   LAB = ef$LAB
   save(DAT,LAB,labels,file=paste0("data/features_nigeria_",epochlength,".RData"))

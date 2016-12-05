@@ -45,7 +45,6 @@ train_model = function(DATtrain,LABtrain,DATval,LABval,modeldict) {
       pred_val_cat = rep("Control",nrow(pred_val))
       pred_val_cat[pred_val$Epilepsy > 0.500] = "Epilepsy"
       confmat = create_confmatrix(pred_val_cat,LABval$diagnosis)
-      
       result$val.confmatrix[cnt] = paste0(confmat[1,1:2],"_",confmat[2,1:2],collapse="_")
       result$val.auc[cnt] = round(aucval,digits=3)
       result$val.kappa[cnt] = round(cohen.kappa(x=confmat)$kappa,digits=3)

@@ -13,7 +13,8 @@ for (i in funcfiles) {
   source(i)
 }
 
-proto_i = "eyesclosed" #"eyesopen" "open" #closed
+# proto_i = "eyesclosed"
+proto_i = "eyesopen" #"open" #closed
 logfile = "data/log_guinneabissau.csv" # not used when uselog = FALSE
 
 #===============================================================
@@ -30,8 +31,10 @@ best_model = trainingresults$best_model_randomforest
 modelcomparison = trainingresults$result
 fes = trainingresults$fes
 
+
+country = "gb"
+bestmodelfile = paste0("data/bestmodel_",proto_i,"_dur",logdur,"_country",country,".RData")
 # Save best model
-bestmodelfile = paste0("data/bestmodel_",proto_i,"_dur",logdur,".RData")
 save(best_model,fes,file=bestmodelfile)
 rm(best_model,fes)
 # Reload best model
@@ -62,6 +65,15 @@ print(paste0(proto_i," acc ",test.acc," kappa ",test.kappa," auc ",test.auc," ",
 # Check that sensitivity actualy optimizes the detection of Epilepsy
 # TO DO: Extract more data by splitting up epochs, this may benefit the training phase
 # TO DO: Experiment with majority vote
+
+# notes meeting 11/11/2016
+# Correlaties tussen modellen
+# Hoeveel kanalen minimaal nodig
+# Zijn mensen met heel hoge en lage probability wel goed gekwantificaeerd... haal in de training de moeileijkere er uit
+# Full Utrecht data as learning environment for feature selection
+# Kappa/AUC?Kies AUC voor evaluatie, en sensitivity for optimizalisatie
+# Documenteer code
+# Gooi ogen open en dicht op 1 hoop? of alleen ogen dicht?
 
 # eyes closed, 10 second epoch
 # 1epoch per person: "eyesclosed acc 0.7 kappa 0.4 auc 0.77 7_3_3_7"

@@ -8,6 +8,7 @@ library(pROC)
 setwd("/home/vincent/utrecht/EEG-epilepsy-diagnosis")
 # load(file="data/features_nigeria_4.RData"); logdur = 4
 load(file="data/features_nigeria_10.RData"); logdur = 10
+
 funcfiles = list.files("functions",include.dirs=TRUE,full.names = TRUE)
 for (i in funcfiles) {
   source(i)
@@ -35,8 +36,9 @@ modeldict = create_modeldict(DAT)
 # modelcomparison = trainingresults$result
 # fes = trainingresults$fes
 
+country = "gb"
+bestmodelfile = paste0("data/bestmodel_",proto_i,"_dur",logdur,"_country",country,".RData")
 # Save best model
-bestmodelfile = paste0("data/bestmodel_",proto_i,"_dur",logdur,".RData")
 # save(best_model,fes,file=bestmodelfile)
 # rm(best_model,fes)
 # Reload best model
@@ -45,7 +47,6 @@ load(bestmodelfile)
 # all data for testing:
 LABtest = rbind(LABtrain,LABval,LABtest)
 DATtest = rbind(DATtrain,DATval,DATtest)
-
 #===============================================================
 # evaluate on test set
 test_factors = DATtest[,fes]

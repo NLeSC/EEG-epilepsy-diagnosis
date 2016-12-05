@@ -86,7 +86,6 @@ clean_emotiv = function(datadir,metadatafile,outputdir,sf,gyrothreshold,mindur,k
   fileinfo = getfileinfo(datadir) # extract id numbers from filenames
   uid = sort(unique(fileinfo$id))
   metadata = merge(metadata,fileinfo,by.y="id",by.x="subject.id") # merge with metadata
-  
   knownerrors.df = data.frame(matrix(unlist(knownerrors),ncol=3,byrow=T),stringsAsFactors = FALSE)
   cnt = 0 #counter for showing process in console
   amountdata = matrix(NA,length(uid),4) # initialize matrix to keep record of amount of data
