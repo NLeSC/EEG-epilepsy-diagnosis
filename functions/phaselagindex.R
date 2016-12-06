@@ -1,4 +1,5 @@
 phaselagindex = function(EEGdata,frequency) {
+
   library(seewave)
   inputw <- function(wave, f, channel=1)  { # function by w.m.otte@umcutrecht.nl (Wim Otte) 11-02-2015
     if(is.data.frame(wave))   {f<-f ; wave <- as.matrix(wave[,channel])}
@@ -29,6 +30,8 @@ phaselagindex = function(EEGdata,frequency) {
   pli <- function( chan1, chan2, f ) { # function by w.m.otte@umcutrecht.nl (Wim Otte) 11-02-2015
     return( abs( mean( sign( Arg( hilbert( chan1, f = f ) ) - Arg( hilbert( chan2, f = f ) ) ) ) ) )
   }
+  # print(EEGdata)
+  
   nchan = ncol(EEGdata)
   plimatrix= matrix(0,nchan,nchan)  
   for (i in 1:nchan) {

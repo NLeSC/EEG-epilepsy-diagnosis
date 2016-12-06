@@ -117,7 +117,6 @@ extract_features = function(datadir,sf,n.levels,filtertypes,epochlength){
       data = data[1:siglen,2:15] # we are only interested in these columns
       sc = t(data)
       wtdata = NULL
-      G = c()
       sc = t(apply(sc,1,bf.fil,sf)) # band-pass filter each signal before performing wavelet analyses
       # Wavelets:
       #1: 32-64 samplewindow #2: 16-32 samplewindow beta; #3: 8-16 samplewindow alpha;
@@ -125,6 +124,7 @@ extract_features = function(datadir,sf,n.levels,filtertypes,epochlength){
       # Sample frequency is 128Hz, so this roughly corresponds to:
       #1: 32-64 Hertz #2: 16-32 Hertz beta;    #3: 8-16 Hertz alpha;   #4: 4-8 Hertz theta
       #5: 2-4 Hertz delta; #6: 1-2 Hertz delta;    #7: 0.5-1 Hertz delta
+      
       for (firi in filtertypes) { #filter types
         mymra = function(x){
           out = mra(x,filter=firi, boundary="periodic",n.levels=n.levels)
@@ -135,31 +135,52 @@ extract_features = function(datadir,sf,n.levels,filtertypes,epochlength){
         bands = c(rep(1:n.levels,each=siglen))  
         temp = as.data.frame(t(wtdata))
         temp$bands = bands
-        
         #----------------------------------------
         # Here we could possibly also extract connectivity features:
         # Connectivity on raw data:
         plimatrix = phaselagindex(EEGdata=t(sc),frequency=128)
         pli_features = data.frame(meanpli=mean(plimatrix),sdpli=sd(plimatrix))
         names(pli_features) = paste0(names(pli_features),".raw.notapplicable")
-        if (length(G) == 0) {
-          G = pli_features
+        if (length(S) == 0) {
+          S = pli_features
         } else {
-          G = cbind(G,pli_features)
+          # G = cbind(G,pli_features)
+          matchcolumns = which(names(S) %in% names(pli_features) == TRUE)
+          if (length(matchcolumns) > 0) { #insert in matrix, rather than 
+            S[i,matchcolumns] = pli_features
+          } else {
+            S = cbind(S,pli_features)
+          }
         }
         # Connectivity on wavelets:
-        for (ubi in unique(bands)) {
-          # print(dim(temp[temp$bands==ubi,which(names(temp)!= "bands")]))
+        for (ubi in unique(bands)) { 
           plimatrix = phaselagindex(EEGdata=temp[temp$bands==ubi,which(names(temp)!= "bands")],frequency=128)
           pli_features = data.frame(meanpli=mean(plimatrix),sdpli=sd(plimatrix))
           names(pli_features) = paste0(names(pli_features),".",firi,".",n.levels)
-          if (length(G) == 0) {
-            G = pli_features
+          matchcolumns = which(names(S) %in% names(pli_features) == TRUE)
+          if (length(matchcolumns) > 0) { 
+            S[i,matchcolumns] = pli_features
           } else {
-            G = cbind(G,pli_features)
+            S = cbind(S,pli_features)
           }
         }
-        
+        # I tried to speed up the above with vapply, but code was not faster
+#         conwav = function(x,firi,n.levels) {
+#           plimatrix = phaselagindex(EEGdata=x,frequency=128) #[temp$bands==x,which(names(temp)!= "bands")]
+#           pli_features = data.frame(meanpli=mean(plimatrix),sdpli=sd(plimatrix))
+#           # names(pli_features) = paste0(names(pli_features),".",firi,".",n.levels)
+#           return(pli_features)
+#         }
+#         
+#         df = temp[,1:14]
+#         indx <- temp$bands
+#         print(firi)
+#         out = lapply(unique(indx), function(x) {
+#           ii <- which(indx %in% x) 
+#           conwav(x=df[ii, ])})
+#         out2 = do.call(cbind.data.frame, out)
+#         G = cbind(G,out2)
+        # t3 = Sys.time()
         # Other features (based on wavelets)
         for (featuresi in fn) { # features to summarize wavelets
           A = getfeatures(x=temp,fns=featuresi)
@@ -170,28 +191,24 @@ extract_features = function(datadir,sf,n.levels,filtertypes,epochlength){
           tmp2 = as.data.frame(t(tmp2))
           tmp3 = as.numeric(apply(A,1,mean)) # mean features value across channels
           tmp3 = as.data.frame(t(tmp3))
-          tmp5 = as.numeric(apply(A,1,sd)) # sd features value across channels
+          tmp5 = as.numeric(apply(A,1,sd)) # sd features value across channelsspeed
           tmp5 = as.data.frame(t(tmp5))
           tmp4 = cbind(tmp,tmp2,tmp3,tmp5)
           colnames(tmp4) =c(paste0(1:n.levels,".",featuresi,".",firi,".min"),
                             paste0(1:n.levels,".",featuresi,".",firi,".max"),
                             paste0(1:n.levels,".",featuresi,".",firi,".mean"),
                             paste0(1:n.levels,".",featuresi,".",firi,".sd")) # add labels and merge
-          
-          if (length(G) == 0) {
-            G = tmp4
+          matchcolumns = which(names(S) %in% names(tmp4) == TRUE)
+          if (length(matchcolumns) > 0) { #insert in matrix, rather than expand matrix size all the time
+            S[i,matchcolumns] = tmp4
           } else {
-            G = cbind(G,tmp4)
+            S = cbind(S,tmp4)
           }
         }
         rm(tmp4)
       }
-      G$fnames = files_short[i]
-      S = rbind(S,G)
-      
-      rm(G)
+      S$fnames[i] = files_short[i]
     }
-    
   }
   DAT = S
   LAB = metadata[which(rownames(metadata) %in% S$fnames == TRUE),]
