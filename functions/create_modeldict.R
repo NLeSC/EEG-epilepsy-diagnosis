@@ -1,23 +1,55 @@
 create_modeldict = function(DAT) {
-  getfeaturetype = function(x) return(unlist(strsplit(x,"[.]"))[2])
+  getfeaturetype = function(x) {
+    tt = unlist(strsplit(x,"[.]"))
+    if (length(tt) >= 4) {
+      tt = tt[2]
+    } else {
+      tt = tt[1]
+    }
+    return(tt)
+  }
   getwavelettype = function(x) {
     tt = unlist(strsplit(x,"[.]"))
-    return(tt[length(tt)-1])
+    if (length(tt) >= 4) {
+      tt = tt[length(tt)-1]
+    } else {
+      if (tt[1] == "meanpli" | tt[1] == "sdpli" | tt[1] == "ninetyppli") {
+        tt = tt[2]
+      } else {
+        tt = "na"
+      }
+    }
+    return(tt)
   }
   getwaveletlevel= function(x) {
     tt = unlist(strsplit(x,"[.]"))
-    return(tt[1])
+    if (length(tt) >= 4) {
+      tt = tt[1]
+    } else {
+      if (tt[1] == "meanpli" | tt[1] == "sdpli" | tt[1] == "ninetyppli") {
+        tt = tt[3]
+        if (tt == "notapplicable") tt = 0
+      } else {
+        tt = "na"
+      }
+    }
+    return(tt)
   }
   getaggtype= function(x) {
     tt = unlist(strsplit(x,"[.]"))
-    return(tt[4])
+    if (length(tt) >= 4) {
+      tt = tt[4]
+    } else {
+      tt = "na"
+    }
+    return(tt)
   }
   #---------------------------
-  DAT = DAT[,-c(ncol(DAT))] #,ncol(DAT)-1
+  DAT = DAT[,-which(names(DAT) =="id" | names(DAT) =="diagnosis" | names(DAT) =="protocol")] #,ncol(DAT)-1
   varnames = names(DAT)
-  modeldict = data.frame(v2 = sapply(varnames,FUN = getwavelettype),
-                         v3 = sapply(varnames,FUN = getfeaturetype),
-                         v5 = sapply(varnames,FUN = getwaveletlevel),
-                         v6 = sapply(varnames,FUN = getaggtype),stringsAsFactors=FALSE)
+  modeldict = data.frame(wvtype = sapply(varnames,FUN = getwavelettype), #v2
+                         feature = sapply(varnames,FUN = getfeaturetype), #v3
+                         wvlevel = sapply(varnames,FUN = getwaveletlevel), #v5
+                         aggtype = sapply(varnames,FUN = getaggtype),stringsAsFactors=FALSE) #v6
   return(modeldict)
 }

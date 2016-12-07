@@ -12,25 +12,32 @@ funcfiles = list.files("functions",include.dirs=TRUE,full.names = TRUE)
 for (i in funcfiles) {
   source(i)
 }
-
 # proto_i = "eyesclosed"
-proto_i = "eyesopen" #"open" #closed
+proto_i = 2#"eyesopen" #"open" =1 #closed= 2
 logfile = "data/log_guinneabissau.csv" # not used when uselog = FALSE
+
+aggdatlab = aggregate_DATLAB(DAT,LAB) # aggregate per unique id
+DAT = aggdatlab$DAT
+LAB = aggdatlab$LAB
+
 
 #===============================================================
 # split data in training, validation and test set
-P = split_data(LAB,DAT,logfile = logfile,proto_i=proto_i,split=c(20,20),uselog = FALSE,logdur=logdur,useallepoch=TRUE)
+P = split_data(LAB,DAT,logfile = logfile,proto_i=proto_i,split=c(20,20),uselog = FALSE,logdur=logdur)
 LABval=P$LABval;LABtest=P$LABtest;LABtrain=P$LABtrain;DATval=P$DATval;DATtest=P$DATtest;DATtrain=P$DATtrain
-kkk
+
 # generate dictionary of model characteristics
 modeldict = create_modeldict(DAT)
+
+DAT = DAT[,-which(names(DAT) == "diagnosis" | names(DAT) == "protocol")]
+
+
 #===============================================================
 # train and evaluate all models
 trainingresults = train_model(DATtrain,LABtrain,DATval,LABval,modeldict)
 best_model = trainingresults$best_model_randomforest
 modelcomparison = trainingresults$result
 fes = trainingresults$fes
-
 
 country = "gb"
 bestmodelfile = paste0("data/bestmodel_",proto_i,"_dur",logdur,"_country",country,".RData")
@@ -44,14 +51,14 @@ load(bestmodelfile)
 # evaluate on test set
 test_factors = DATtest[,fes]
 pred_test = predict(best_model, test_factors,type="prob")
-result.roc <- roc(DATtest$diagn, pred_test$Control)
+result.roc <- roc(DATtest$diagn, pred_test$X1)
 # Code to plot the ROC curve if we wanted to:
 # x11()
 # plot(result.roc, print.thres="best", print.thres.best.method="closest.topleft")
 auctest = result.roc$auc
 result.coords <- coords(result.roc, "best", best.method="closest.topleft", ret=c("threshold", "accuracy"))
-pred_test_cat = rep("Control",nrow(pred_test))
-pred_test_cat[pred_test$Epilepsy > 0.500] = "Epilepsy"
+pred_test_cat = rep("X1",nrow(pred_test))
+pred_test_cat[pred_test$X2 > 0.500] = "X2"
 confmat = create_confmatrix(pred_test_cat,LABtest$diagnosis) 
 test.confmatrix = paste0(confmat[1,1:2],"_",confmat[2,1:2],collapse="_")
 test.auc = round(auctest,digits=3)
@@ -67,5 +74,6 @@ print(paste0(proto_i," acc ",test.acc," kappa ",test.kappa," auc ",test.auc," ",
 
 # eyes open, 10 second epoch
 # "eyesopen acc 0.8 kappa 0.6 auc 0.91 9_1_3_7"
+
 
 
