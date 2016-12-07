@@ -19,9 +19,9 @@ logfile = "data/log_guinneabissau.csv" # not used when uselog = FALSE
 
 #===============================================================
 # split data in training, validation and test set
-P = split_data(LAB,DAT,logfile = logfile,proto_i=proto_i,split=c(20,20),uselog = FALSE,logdur=logdur,useallepoch=FALSE)
+P = split_data(LAB,DAT,logfile = logfile,proto_i=proto_i,split=c(20,20),uselog = FALSE,logdur=logdur,useallepoch=TRUE)
 LABval=P$LABval;LABtest=P$LABtest;LABtrain=P$LABtrain;DATval=P$DATval;DATtest=P$DATtest;DATtrain=P$DATtrain
-
+kkk
 # generate dictionary of model characteristics
 modeldict = create_modeldict(DAT)
 #===============================================================
@@ -61,19 +61,6 @@ print(paste0(proto_i," acc ",test.acc," kappa ",test.kappa," auc ",test.auc," ",
 #======================================
 # Results:
 
-# TO DO: optimize sensitivity and report on sensitivity (V)
-# Check that sensitivity actualy optimizes the detection of Epilepsy
-# TO DO: Extract more data by splitting up epochs, this may benefit the training phase
-# TO DO: Experiment with majority vote
-
-# notes meeting 11/11/2016
-# Correlaties tussen modellen
-# Hoeveel kanalen minimaal nodig
-# Zijn mensen met heel hoge en lage probability wel goed gekwantificaeerd... haal in de training de moeileijkere er uit
-# Full Utrecht data as learning environment for feature selection
-# Kappa/AUC?Kies AUC voor evaluatie, en sensitivity for optimizalisatie
-# Documenteer code
-# Gooi ogen open en dicht op 1 hoop? of alleen ogen dicht?
 
 # eyes closed, 10 second epoch
 # 1epoch per person: "eyesclosed acc 0.7 kappa 0.4 auc 0.77 7_3_3_7"
