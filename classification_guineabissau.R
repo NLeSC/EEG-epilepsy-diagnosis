@@ -16,21 +16,22 @@ for (i in funcfiles) {
 proto_i = 2#"eyesopen" #"open" =1 #closed= 2
 logfile = "data/log_guinneabissau.csv" # not used when uselog = FALSE
 
-aggdatlab = aggregate_DATLAB(DAT,LAB) # aggregate per unique id
-DAT = aggdatlab$DAT
-LAB = aggdatlab$LAB
-
-
+# tidy up formatting to be suitable for classifier training
+RDL = reformat_DATLAB(DAT,LAB,aggregateperid=TRUE) # aggregate per unique id
+DAT =RDL$DAT
+LAB = RDL$LAB
+# kkkk
 #===============================================================
 # split data in training, validation and test set
-P = split_data(LAB,DAT,logfile = logfile,proto_i=proto_i,split=c(20,20),uselog = FALSE,logdur=logdur)
+P = split_data(LAB,DAT,logfile = logfile,proto_i=proto_i,split=c(20,20),
+               uselog = FALSE,logdur=logdur) #,sampleidentifier=sampleidentifier
 LABval=P$LABval;LABtest=P$LABtest;LABtrain=P$LABtrain;DATval=P$DATval;DATtest=P$DATtest;DATtrain=P$DATtrain
+# print(names(DATtest[,464:578]))
+# kkk
 
 # generate dictionary of model characteristics
 modeldict = create_modeldict(DAT)
-
-DAT = DAT[,-which(names(DAT) == "diagnosis" | names(DAT) == "protocol")]
-
+# DAT = DAT[,-which(names(DAT) == "diagnosis" | names(DAT) == "protocol")]
 
 #===============================================================
 # train and evaluate all models

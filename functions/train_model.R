@@ -27,7 +27,8 @@ train_model = function(DATtrain,LABtrain,DATval,LABval,modeldict) {
       #===========================================================
       # set training paramerters
       # ctrl = trainControl(method = "none",number=10,repeats=10,search="random")
-      ctrl = trainControl(method = "repeatedcv",number=10,repeats=1,search="random",classProbs = TRUE, summaryFunction = twoClassSummary)
+      ctrl = trainControl(method = "repeatedcv",number=10,repeats=1,search="random",
+                          classProbs = TRUE, summaryFunction = twoClassSummary) #, summaryFunction = twoClassSummary) # twoClassSummary is needed for Sensitivity optimization
       # ctrl = trainControl(method = "repeatedcv",number=10,repeats=3,search="grid")
       #===========================================================
       # train on training set
@@ -35,18 +36,19 @@ train_model = function(DATtrain,LABtrain,DATval,LABval,modeldict) {
       set.seed(300)
       seeds <- vector(mode = "list", length = 10)#
       for(i in 1:10) seeds[[i]] <- 300
-      m_rf = train(y=as.factor(make.names(DATtrain$diagn)),x=train_factors,seeds=seeds,
-                   method="rf",trControl=ctrl,tuneLength=10,metric = "Sens") # # train 10 different mtry values using random search
+      m_rf = train(y=as.factor(make.names(DATtrain$diagnosis)),x=train_factors,seeds=seeds,
+                   method="rf",trControl=ctrl,tuneLength=10,metric="Sens") # # train 10 different mtry values using random search
       #metric="Kappa"
+      #metric = "Sens"
       #===========================================================
       # apply to validation set
       pred_val = predict(m_rf,val_factors,type="prob")
-      result.roc <- roc(DATval$diagn, pred_val$X1) # X1 is the control group
+      result.roc <- roc(DATval$diagnosis, pred_val$X1) # X1 is the control group
       aucval = result.roc$auc
       result.coords <- coords(result.roc, "best", best.method="closest.topleft", ret=c("threshold", "accuracy"))
       pred_val_cat = rep("X1",nrow(pred_val))
       pred_val_cat[pred_val$X2 > 0.500] = "X2" #"Epilepsy"
-      confmat = create_confmatrix(pred_val_cat,LABval$diagnosis)
+      confmat = create_confmatrix(pred_val_cat,LABval$diagnosis) #osis
       result$val.confmatrix[cnt] = paste0(confmat[1,1:2],"_",confmat[2,1:2],collapse="_")
       result$val.auc[cnt] = round(aucval,digits=3)
       result$val.kappa[cnt] = round(cohen.kappa(x=confmat)$kappa,digits=3)
@@ -61,7 +63,7 @@ train_model = function(DATtrain,LABtrain,DATval,LABval,modeldict) {
     print("Now train best model on training data and validation data combined")
     fes = which(allvalues==as.character(result$model[nrow(result)]))
     train_factors = rbind(DATtrain[,fes],DATval[,fes]) #x
-    din = as.factor(c(make.names(DATtrain$diagn),make.names(DATval$diagn))) #y
+    din = as.factor(c(make.names(DATtrain$diagnosis),make.names(DATval$diagnosis))) #y
     set.seed(300)
     best_model_randomforest = train(y=din,x=train_factors,
                                     method="rf",metric="Sens",trControl=ctrl,tuneLength=10) # train 10 different mtry values using random search
