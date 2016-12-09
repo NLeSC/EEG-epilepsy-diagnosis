@@ -31,7 +31,7 @@ extract_features = function(datadir,sf,n.levels,filtertypes,epochlength){
     zerocross = function(x) { # counts the number of zero crossing
       cc = rep(0,length(x))
       bf.fil = function(y) { # band-pass filter
-        sf = 1000
+        sf = 128
         lb = 0.2
         hb = 60
         Wc = matrix(0,2,1) 
@@ -79,13 +79,15 @@ extract_features = function(datadir,sf,n.levels,filtertypes,epochlength){
     return(as.numeric(tmp2))
   }
   bf.fil = function(x,sf) { # low-pass filter
-    hb = floor(sf/2) - 1
-    lb = 0.25 #we only have 4 seconds of data, so there is no point at looking at < 0.25 Hz
-    Wc = matrix(0,2,1)
-    Wc[1,1] = lb / (sf/2)
-    Wc[2,1] = hb / (sf/2)
-    bf = signal::butter(n=4,Wc,type=c("pass")) 
-    bf.fil = signal::filter(bf,x) 
+    x = x - mean(x)
+#     hb = floor(sf/2) - 1
+#     lb = 0.25 #we only have 4 seconds of data, so there is no point at looking at < 0.25 Hz
+#     Wc = matrix(0,2,1)
+#     Wc[1,1] = lb / (sf/2)
+#     Wc[2,1] = hb / (sf/2)
+#     bf = signal::butter(n=4,Wc,type=c("pass")) 
+#     bf.fil = signal::filter(bf,x) 
+      return(x)
   }
   #-------------------------------------------
   siglen = epochlength*sf
@@ -123,6 +125,23 @@ extract_features = function(datadir,sf,n.levels,filtertypes,epochlength){
         windowdata = t(windowdata)
         wtdata = NULL
         windowdata = t(apply(windowdata,1,bf.fil,sf)) # band-pass filter each signal before performing wavelet analyses
+        
+#         #explore data density:
+#         cnt = 1
+#         for (i in 1:nrow(windowdata)) {
+#           if (cnt == 1) {
+#             x11()
+#             par(mfrow=c(3,3))
+#             cnt = cnt + 1
+#           } else {
+#             cnt = cnt + 1
+#             if (cnt == 10) cnt = 1
+#           }
+#           d <- density(windowdata[i,]) # returns the density data
+#           plot(d,col="red",xlim=range(d$x),main=i) # plots the results
+#           print(paste0(i," ",mean(windowdata[i,])))
+#         }
+#         kkk
         #------------------------------------------------------------
         # Wavelets:
         #1: 32-64 samplewindow #2: 16-32 samplewindow beta; #3: 8-16 samplewindow alpha;

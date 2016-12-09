@@ -55,7 +55,7 @@ if (extractfeature == TRUE) {
 #                    paste0("la",seq(8,20,by=2)), #Least Aymetric
 #                    paste0("bl",c(14,18,20)), #Best localized
 #                    paste0("c",seq(6,30,by=6))) # Coiflet
-  filtertypes =  paste0("d",seq(2,10,by=2)) # Daubechies
+  filtertypes =  "d10" # paste0("d",seq(2,10,by=2)) # Daubechies
   n.levels = 7
   ef = extract_features(datadir,sf,n.levels,filtertypes,epochlength)
   DAT = ef$DAT

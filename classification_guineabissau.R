@@ -2,7 +2,6 @@ rm(list=ls())
 graphics.off()
 library(caret)
 library(psych)
-# library(ROCR)
 library(pROC)
 
 setwd("/home/vincent/utrecht/EEG-epilepsy-diagnosis")
@@ -13,41 +12,46 @@ for (i in funcfiles) {
   source(i)
 }
 # proto_i = "eyesclosed"
-proto_i = 2#"eyesopen" #"open" =1 #closed= 2
+proto_i = 2 #"eyesopen" #"open" =1 #closed= 2
 logfile = "data/log_guinneabissau.csv" # not used when uselog = FALSE
 
+perid = TRUE
+trainbestmodel = TRUE #option to turn this off for Nigeria
+
 # tidy up formatting to be suitable for classifier training
-RDL = reformat_DATLAB(DAT,LAB,aggregateperid=TRUE) # aggregate per unique id
+RDL = reformat_DATLAB(DAT,LAB,aggregateperid=perid) # aggregate per unique id
 DAT =RDL$DAT
 LAB = RDL$LAB
-# kkkk
+
 #===============================================================
 # split data in training, validation and test set
 P = split_data(LAB,DAT,logfile = logfile,proto_i=proto_i,split=c(20,20),
-               uselog = FALSE,logdur=logdur) #,sampleidentifier=sampleidentifier
+               uselog = FALSE,logdur=logdur)
 LABval=P$LABval;LABtest=P$LABtest;LABtrain=P$LABtrain;DATval=P$DATval;DATtest=P$DATtest;DATtrain=P$DATtrain
-# print(names(DATtest[,464:578]))
-# kkk
-
 # generate dictionary of model characteristics
 modeldict = create_modeldict(DAT)
-# DAT = DAT[,-which(names(DAT) == "diagnosis" | names(DAT) == "protocol")]
-
 #===============================================================
 # train and evaluate all models
-trainingresults = train_model(DATtrain,LABtrain,DATval,LABval,modeldict)
-best_model = trainingresults$best_model_randomforest
-modelcomparison = trainingresults$result
-fes = trainingresults$fes
-
-country = "gb"
-bestmodelfile = paste0("data/bestmodel_",proto_i,"_dur",logdur,"_country",country,".RData")
-# Save best model
-save(best_model,fes,file=bestmodelfile)
-rm(best_model,fes)
+if (trainbestmodel == TRUE) {
+  trainingresults = train_model(DATtrain,LABtrain,DATval,LABval,modeldict)
+  best_model = trainingresults$best_model_randomforest
+  modelcomparison = trainingresults$result
+  fes = trainingresults$fes
+  country = "gb" #"gb" =  guinea bisau
+  bestmodelfile = paste0("data/bestmodel_",proto_i,"_dur",logdur,"_country",country,"_perid",perid,".RData")
+  save(best_model,fes,file=bestmodelfile) # Save best model
+  rm(best_model,fes)
+} else {
+  country = "ni" # load model from other country
+  bestmodelfile = paste0("data/bestmodel_",proto_i,"_dur",logdur,"_country",country,"_perid",perid,".RData")
+    LABtest = rbind(LABtrain,LABval) # ignore test data, and only evaluate on training and validation data
+    DATtest = rbind(DATtrain,DATval)
+#   reshuffle = sample(1:nrow(DATval))
+#   DATtest = DATtest[reshuffle,]
+#   LABtest = LABtest[reshuffle,]
+}
 # Reload best model
 load(bestmodelfile)
-
 #===============================================================
 # evaluate on test set
 test_factors = DATtest[,fes]
@@ -66,15 +70,3 @@ test.auc = round(auctest,digits=3)
 test.kappa = round(cohen.kappa(x=confmat)$kappa,digits=3)
 test.acc = round(sum(diag(confmat)) / sum(confmat),digits=3)
 print(paste0(proto_i," acc ",test.acc," kappa ",test.kappa," auc ",test.auc," ",test.confmatrix))
-#======================================
-# Results:
-
-
-# eyes closed, 10 second epoch
-# 1epoch per person: "eyesclosed acc 0.7 kappa 0.4 auc 0.77 7_3_3_7"
-
-# eyes open, 10 second epoch
-# "eyesopen acc 0.8 kappa 0.6 auc 0.91 9_1_3_7"
-
-
-
