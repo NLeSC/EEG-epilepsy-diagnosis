@@ -46,8 +46,8 @@ if (extractfeature == TRUE) {
   #                  paste0("la",seq(8,20,by=2)), #Least Aymetric
   #                  paste0("bl",c(14,18,20)), #Best localized
   #                  paste0("c",seq(6,30,by=6))) # Coiflet
-  # filtertypes =  paste0("d",seq(10,by=2)) # Daubechies
-  filtertypes =  c("d10") # Daubechies 10, because that was the winner in GB
+  filtertypes =  paste0("d",seq(2,10,by=4)) # Daubechies
+  # filtertypes =  c("d10") # Daubechies 10, because that was the winner in GB
   
   n.levels = 7
   ef = extract_features(datadir,sf,n.levels,filtertypes,epochlength)

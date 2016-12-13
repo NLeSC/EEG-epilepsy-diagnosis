@@ -32,8 +32,9 @@ split_data = function(LAB,DAT,logfile = "log_guinneabissau.csv",proto_i= 1,split
       }
     }
     # all remaining data will go to the training set
-    LABtrain = LAB[which(LAB$protocol == proto_i & ((LAB$id %in% ids_val)==FALSE | (LAB$id %in% ids_test)==FALSE)),]
+    LABtrain = LAB[which(LAB$protocol == proto_i & ((LAB$id %in% ids_val)==FALSE & (LAB$id %in% ids_test)==FALSE)),]
     DATtrain= DAT[which(DAT$protocol == proto_i & (DAT$id %in% LABtrain$id)  == TRUE),]
+    
     invisible(list(LABval=LABval,LABtest=LABtest,LABtrain=LABtrain,DATval=DATval,DATtest=DATtest,DATtrain=DATtrain))
   }
   #   split_data_bypython = function(logfile,proto_i,logdur) {

@@ -1,6 +1,7 @@
-train_model = function(DATtrain,LABtrain,DATval,LABval,modeldict) {
+train_model = function(DATtrain,LABtrain,DATval,LABval,modeldict,classifier="rf",perid) {
   #only look for best possible wavelet type, but used all features and aggregationtypes
   testpart = c("wavelet") #,"features","aggregationtype") #,"waveletlevel"
+  performancemetric = "Spec" #"Spec"
   for (testparti in testpart) {
     cnt = 1
     set.seed(300)
@@ -32,41 +33,75 @@ train_model = function(DATtrain,LABtrain,DATval,LABval,modeldict) {
       # ctrl = trainControl(method = "repeatedcv",number=10,repeats=3,search="grid")
       #===========================================================
       # train on training set
-
+      
       set.seed(300)
       seeds <- vector(mode = "list", length = 10)#
       for(i in 1:10) seeds[[i]] <- 300
-      m_rf = train(y=as.factor(make.names(DATtrain$diagnosis)),x=train_factors,seeds=seeds,
-                   method="rf",trControl=ctrl,tuneLength=10,metric="Sens") # # train 10 different mtry values using random search
+      if (classifier == "rf") {
+        # random forest
+        m_rf = train(y=as.factor(make.names(DATtrain$diagnosis)),x=train_factors,seeds=seeds,
+                     method="rf",trControl=ctrl,tuneLength=10,metric=performancemetric) # # train 10 different mtry values using random search
+      }
+      if (classifier == "lg") {
+        m_rf = train(y=as.factor(make.names(DATtrain$diagnosis)),x=train_factors,#seeds=seeds,
+                     method="glm",family="binomial",trControl=ctrl,tuneLength=10,metric=performancemetric) # # train 10 different mtry values using random search
+      }
       #metric="Kappa"
       #metric = "Sens"
       #===========================================================
       # apply to validation set
       pred_val = predict(m_rf,val_factors,type="prob")
-      result.roc <- roc(DATval$diagnosis, pred_val$X1) # X1 is the control group
+      DATval_agg = DATval
+      LABval_agg = LABval
+      if (perid == FALSE) { # aggregates estimates per person
+        pred_val = data.frame(pred_val,id=LABval$id)
+        pred_val = aggregate(. ~ id,data=pred_val,mean)
+        DATval_agg = aggregate(. ~ id,data=DATval,mean)
+        LABval_agg = aggregate(. ~ id,data=LABval,function(x){x[1]})
+      }
+      result.roc <- roc(DATval_agg$diagnosis, pred_val$X1) # X1 is the control group
       aucval = result.roc$auc
       result.coords <- coords(result.roc, "best", best.method="closest.topleft", ret=c("threshold", "accuracy"))
       pred_val_cat = rep("X1",nrow(pred_val))
       pred_val_cat[pred_val$X2 > 0.500] = "X2" #"Epilepsy"
-      confmat = create_confmatrix(pred_val_cat,LABval$diagnosis) #osis
-      result$val.confmatrix[cnt] = paste0(confmat[1,1:2],"_",confmat[2,1:2],collapse="_")
+      refe = make.names(LABval_agg$diagnosis)
+      predi = pred_val_cat
+      confmat = create_confmatrix(predi,refe)
+      result$val.confmatrix[cnt] = paste0(confmat[1,1],"_",confmat[1,2],"_",confmat[2,1],"_",confmat[2,2])
       result$val.auc[cnt] = round(aucval,digits=3)
       result$val.kappa[cnt] = round(cohen.kappa(x=confmat)$kappa,digits=3)
       result$val.acc[cnt] = sum(diag(confmat)) / sum(confmat)
+      predi = which(names(dimnames(confmat))=="predicted")
+      if (predi == 1) {  # sensitivty to detect Epilepsy
+        sens = round(confmat[2,2] / (confmat[2,2]+confmat[1,2]),digits=3) 
+      } else {
+        sens= round(confmat[2,2] / (confmat[2,2]+confmat[2,1]),digits=3) 
+      }
+      result$val.sens[cnt] = sens
       #===================================================================
       print(paste0(valueseval[jj]," validation Kappa: ",result$val.kappa[cnt],
                    " validation accuracy: ",result$val.acc[cnt],
-                   " validation auc: ",result$val.auc[cnt]))
+                   " validation auc: ",result$val.auc[cnt],
+                   " conf matrix: ",result$val.confmatrix[cnt],
+                   " validation sens: ",result$val.sens[cnt]))
       cnt = cnt+1
     }
-    result = result[with(result,order(val.kappa,val.auc,val.acc)),]
+    result = result[with(result,order(val.sens,val.kappa,val.auc,val.acc)),]
     print("Now train best model on training data and validation data combined")
     fes = which(allvalues==as.character(result$model[nrow(result)]))
-    train_factors = rbind(DATtrain[,fes],DATval[,fes]) #x
-    din = as.factor(c(make.names(DATtrain$diagnosis),make.names(DATval$diagnosis))) #y
+    train_factors = rbind(DATtrain[,fes],DATval[,fes]) #features of train and validation combined
+    din = as.factor(c(make.names(DATtrain$diagnosis),make.names(DATval$diagnosis))) #diagnosis of train and val combined
     set.seed(300)
-    best_model_randomforest = train(y=din,x=train_factors,
-                                    method="rf",metric="Sens",trControl=ctrl,tuneLength=10) # train 10 different mtry values using random search
+    # train 10 different mtry values using random search
+    if (classifier == "rf") {
+      best_model = train(y=din,x=train_factors,seeds=seeds,
+                                      method="rf",metric=performancemetric,trControl=ctrl,tuneLength=10) 
+    }
+    if (classifier == "lg") {
+      best_model = train(y=din,x=train_factors,#seeds=seeds,
+                                      method="glm",family="binomial",trControl=ctrl,tuneLength=10,metric=performancemetric)
+    }
   }
-  invisible(list(result=result,best_model_randomforest=best_model_randomforest,fes=fes))
+  invisible(list(result=result,best_model=best_model,fes=fes))
+  
 }
