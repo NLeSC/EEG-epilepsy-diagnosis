@@ -1,19 +1,18 @@
 rm(list=ls())
 graphics.off()
-library(caret)
-library(psych)
-library(pROC)
+# library(caret)
+# library(psych)
+# library(pROC)
+library(emotivepilepsy)
 
-setwd("/home/vincent/utrecht/EEG-epilepsy-diagnosis")
+setwd("/home/vincent/utrecht")
 # load(file="data/features_ginneabissau_4.RData"); logdur = 4
-load(file="data/features_ginneabissau_10.RData"); logdur = 10
-funcfiles = list.files("functions",include.dirs=TRUE,full.names = TRUE)
-for (i in funcfiles) {
-  source(i)
-}
+load(file="features_and_bestmodels/features_ginneabissau_10.RData"); logdur = 10
+funcfiles = list.files("emotivepilepsy/R",include.dirs=TRUE,full.names = TRUE)
+for (i in funcfiles) source(i)
 # proto_i = "eyesclosed"
 proto_i = 1 #"eyesopen" #"open" =1 #closed= 2
-logfile = "data/log_guinneabissau.csv" # not used when uselog = FALSE
+logfile = "features_and_bestmodels/log_guinneabissau.csv" # not used when uselog = FALSE
 
 perid = FALSE
 trainbestmodel = FALSE #option to turn this off for Nigeria
@@ -39,12 +38,12 @@ if (trainbestmodel == TRUE) {
   modelcomparison = trainingresults$result
   fes = trainingresults$fes
   country = "gb" #"gb" =  guinea bisau
-  bestmodelfile = paste0("data/bestmodel_",proto_i,"_dur",logdur,"_country",country,"_perid",perid,".RData")
+  bestmodelfile = paste0("features_and_bestmodels/bestmodel_",proto_i,"_dur",logdur,"_country",country,"_perid",perid,".RData")
   save(best_model,fes,file=bestmodelfile) # Save best model
   rm(best_model,fes)
 } else {
   country = "ni" # load model from other country
-  bestmodelfile = paste0("data/bestmodel_",proto_i,"_dur",logdur,"_country",country,"_perid",perid,".RData")
+  bestmodelfile = paste0("features_and_bestmodels/bestmodel_",proto_i,"_dur",logdur,"_country",country,"_perid",perid,".RData")
   LABtest = rbind(LABval) # ignore test data, and only evaluate on training and validation data
   DATtest = rbind(DATval)
 }
@@ -53,4 +52,4 @@ load(bestmodelfile)
 #===============================================================
 # evaluate on test set
 test_factors = DATtest[,fes]
-evaluatemodel(model=best_model,x=test_factors,labels=LABtest)
+evaluatemodel(model=best_model,x=test_factors,labels=LABtest,proto_i=proto_i,aggregateperid=perid)

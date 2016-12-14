@@ -1,13 +1,11 @@
 phaselagindex = function(EEGdata,frequency=128) {
-
-  library(seewave)
-  inputw <- function(wave, f, channel=1)  { # function by w.m.otte@umcutrecht.nl (Wim Otte) 11-02-2015
+  inputw2 <- function(wave, f, channel=1)  { # function by w.m.otte@umcutrecht.nl (Wim Otte) 11-02-2015
     if(is.data.frame(wave))   {f<-f ; wave <- as.matrix(wave[,channel])}
     if(is.vector(wave))       {f<-f ; wave <- as.matrix(wave)}
     # mts objects are matrix by default, there is then a conflict between is.matrix and is.mts
-    if(is.matrix(wave) && !is.mts(wave)) {f<-f ; wave <- wave[,channel,drop=FALSE]}  
+    if(is.matrix(wave) && !stats::is.mts(wave)) {f<-f ; wave <- wave[,channel,drop=FALSE]}  
     if(is.ts(wave))           {f<-frequency(wave) ; wave <- as.matrix(wave)} 
-    if(is.mts(wave))          {f<-frequency(wave) ; wave <- as.matrix(wave[, channel])} 
+    if(stats::is.mts(wave))          {f<-frequency(wave) ; wave <- as.matrix(wave[, channel])} 
     if(class(wave)=="Sample") {f<-wave$rate ; wave <- as.matrix(wave$sound[channel, ])}
     if(class(wave)=="audioSample"){f<-wave$rate ; wave <- as.matrix(wave)}
     if(class(wave)=="Wave") {    
@@ -18,8 +16,8 @@ phaselagindex = function(EEGdata,frequency=128) {
     return(list(w=wave,f=f))
   } 
   hilbert <- function( wave, f )  { # function by w.m.otte@umcutrecht.nl (Wim Otte) 11-02-2015
-    wave<-inputw(wave=wave,f=f)$w
-    n<-nrow(wave)
+    wave<- inputw2(wave=wave,f=f)$w
+    n<- nrow(wave)
     ff<-fft(wave)
     h<-rep(0,n)
     if(n>0 & 2*floor(n/2)==n){h[c(1, n/2+1)]<-1; h[2:(n/2)]<-2}
@@ -30,8 +28,6 @@ phaselagindex = function(EEGdata,frequency=128) {
   pli <- function( chan1, chan2, f ) { # function by w.m.otte@umcutrecht.nl (Wim Otte) 11-02-2015
     return( abs( mean( sign( Arg( hilbert( chan1, f = f ) ) - Arg( hilbert( chan2, f = f ) ) ) ) ) )
   }
-  # print(EEGdata)
-  
   nchan = ncol(EEGdata)
   plimatrix= matrix(0,nchan,nchan)  
   for (i in 1:nchan) {
@@ -39,6 +35,5 @@ phaselagindex = function(EEGdata,frequency=128) {
       plimatrix[i,j] = pli(EEGdata[,i], EEGdata[,j], f =frequency)
     }
   }
-  # return(plimatrix)
   invisible(list(meanpli=mean(plimatrix),sdpli=sd(plimatrix),ninetyppli=as.numeric(quantile(abs(plimatrix),probs=0.9))))
 }

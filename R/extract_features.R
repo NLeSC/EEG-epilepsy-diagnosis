@@ -1,18 +1,13 @@
-extract_features = function(datadir,sf,n.levels,filtertypes,epochlength){
+extract_features = function(datadir,sf,n.levels,filtertypes,epochlength,fn){
   print("extract features")
-  #subfunctions
-  
   getfeatures = function(x,fns) {
     #--------------------------------------------------------
     # define generic function for feature extraction
     # Note: approx_entropy from pracma package is very slow
-    require(entropy)
-    require(signal); require(moments)
-    library(pracma)
     # x: dataframe with multiple signals in columns over which the feature is calculated
-    # fn: feature names that need to be calculated
+    # fns: feature names that need to be calculated
     en.entropy = function(x) { # entropy
-      en.entropy = entropy::entropy(discretize(as.numeric(x)+runif(n=length(x),min=0,max=1e-8)+0.0001,numBins=100))
+      en.entropy = entropy::entropy(entropy::discretize(as.numeric(x)+runif(n=length(x),min=0,max=1e-8)+0.0001,numBins=100))
     }
     pracma.samen = function(x) { #sample entropy
       pracma.samen = pracma::sample_entropy(x)
@@ -115,7 +110,7 @@ extract_features = function(datadir,sf,n.levels,filtertypes,epochlength){
       cnt = 0
     }
     cnt = cnt + 1
-    cleaneddata = read.csv(files[i]) # load files
+    cleaneddata = utils::read.csv(files[i]) # load files
     if (nrow(cleaneddata) >= siglen) { 
       Nwindows = floor(nrow(cleaneddata) / siglen)
       # cnt = 0
@@ -152,7 +147,7 @@ extract_features = function(datadir,sf,n.levels,filtertypes,epochlength){
         for (firi in filtertypes) { #filter types
           
           mymra = function(x){
-            out = mra(x,filter=firi, boundary="periodic",n.levels=n.levels)
+            out = wavelets::mra(x,filter=firi, boundary="periodic",n.levels=n.levels)
             return(unlist(c(out@D)))
           }
           wtdata = t(apply(windowdata,1,mymra)) # apply multi-resolution analyses

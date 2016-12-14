@@ -1,0 +1,4 @@
+export(clean_emotiv, create_confmatrix)
+importFrom("stats", "aggregate", "fft", "is.ts", "predict", "quantile",
+             "runif", "sd", "spectrum")
+importFrom("utils", "read.csv")

@@ -28,22 +28,21 @@ train_model = function(DATtrain,LABtrain,DATval,LABval,modeldict,classifier="rf"
       #===========================================================
       # set training paramerters
       # ctrl = trainControl(method = "none",number=10,repeats=10,search="random")
-      ctrl = trainControl(method = "repeatedcv",number=10,repeats=1,search="random",
-                          classProbs = TRUE, summaryFunction = twoClassSummary) #, summaryFunction = twoClassSummary) # twoClassSummary is needed for Sensitivity optimization
+      ctrl = caret::trainControl(method = "repeatedcv",number=10,repeats=1,search="random",
+                          classProbs = TRUE, summaryFunction = caret::twoClassSummary) #, summaryFunction = twoClassSummary) # twoClassSummary is needed for Sensitivity optimization
       # ctrl = trainControl(method = "repeatedcv",number=10,repeats=3,search="grid")
       #===========================================================
       # train on training set
-      
       set.seed(300)
       seeds <- vector(mode = "list", length = 10)#
       for(i in 1:10) seeds[[i]] <- 300
       if (classifier == "rf") {
         # random forest
-        m_rf = train(y=as.factor(make.names(DATtrain$diagnosis)),x=train_factors,seeds=seeds,
+        m_rf = caret::train(y=as.factor(make.names(DATtrain$diagnosis)),x=train_factors,seeds=seeds,
                      method="rf",trControl=ctrl,tuneLength=10,metric=performancemetric) # # train 10 different mtry values using random search
       }
       if (classifier == "lg") {
-        m_rf = train(y=as.factor(make.names(DATtrain$diagnosis)),x=train_factors,#seeds=seeds,
+        m_rf = caret::train(y=as.factor(make.names(DATtrain$diagnosis)),x=train_factors,#seeds=seeds,
                      method="glm",family="binomial",trControl=ctrl,tuneLength=10,metric=performancemetric) # # train 10 different mtry values using random search
       }
       #metric="Kappa"
@@ -59,9 +58,9 @@ train_model = function(DATtrain,LABtrain,DATval,LABval,modeldict,classifier="rf"
         DATval_agg = aggregate(. ~ id,data=DATval,mean)
         LABval_agg = aggregate(. ~ id,data=LABval,function(x){x[1]})
       }
-      result.roc <- roc(DATval_agg$diagnosis, pred_val$X1) # X1 is the control group
+      result.roc <- pROC::roc(DATval_agg$diagnosis, pred_val$X1) # X1 is the control group
       aucval = result.roc$auc
-      result.coords <- coords(result.roc, "best", best.method="closest.topleft", ret=c("threshold", "accuracy"))
+      result.coords <- pROC::coords(result.roc, "best", best.method="closest.topleft", ret=c("threshold", "accuracy"))
       pred_val_cat = rep("X1",nrow(pred_val))
       pred_val_cat[pred_val$X2 > 0.500] = "X2" #"Epilepsy"
       refe = make.names(LABval_agg$diagnosis)
@@ -69,7 +68,7 @@ train_model = function(DATtrain,LABtrain,DATval,LABval,modeldict,classifier="rf"
       confmat = create_confmatrix(predi,refe)
       result$val.confmatrix[cnt] = paste0(confmat[1,1],"_",confmat[1,2],"_",confmat[2,1],"_",confmat[2,2])
       result$val.auc[cnt] = round(aucval,digits=3)
-      result$val.kappa[cnt] = round(cohen.kappa(x=confmat)$kappa,digits=3)
+      result$val.kappa[cnt] = round(psych::cohen.kappa(x=confmat)$kappa,digits=3)
       result$val.acc[cnt] = sum(diag(confmat)) / sum(confmat)
       predi = which(names(dimnames(confmat))=="predicted")
       if (predi == 1) {  # sensitivty to detect Epilepsy
@@ -94,14 +93,13 @@ train_model = function(DATtrain,LABtrain,DATval,LABval,modeldict,classifier="rf"
     set.seed(300)
     # train 10 different mtry values using random search
     if (classifier == "rf") {
-      best_model = train(y=din,x=train_factors,seeds=seeds,
+      best_model = caret::train(y=din,x=train_factors,seeds=seeds,
                                       method="rf",metric=performancemetric,trControl=ctrl,tuneLength=10) 
     }
     if (classifier == "lg") {
-      best_model = train(y=din,x=train_factors,#seeds=seeds,
+      best_model = caret::train(y=din,x=train_factors,#seeds=seeds,
                                       method="glm",family="binomial",trControl=ctrl,tuneLength=10,metric=performancemetric)
     }
   }
   invisible(list(result=result,best_model=best_model,fes=fes))
-  
 }

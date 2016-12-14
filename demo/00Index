@@ -1,0 +1,4 @@
+classification_nigeria    train and evaluate classifier Nigeria
+dataprep_guineabissau     prepare data Guinea Bissau
+classification_guineabissau   train and evaluate classifier Guinea Bissau
+dataprep_nigeria          prepare data Nigeria

@@ -1,4 +1,6 @@
-clean_emotiv = function(datadir,metadatafile,outputdir,sf,gyrothreshold,mindur,knownerrors,protocoltimes,referencegroup,condition_start_closed) {
+clean_emotiv = function(datadir,metadatafile,outputdir,sf,gyrothreshold,
+                        mindur,knownerrors,protocoltimes,referencegroup,condition_start_closed,
+                        protocolvariable) {
   print("load and clean data")
   #--------------------------------------------------------
   # subfunctions
@@ -25,8 +27,8 @@ clean_emotiv = function(datadir,metadatafile,outputdir,sf,gyrothreshold,mindur,k
     #======================================================================
     # add labels to unfit parts of the data based on qc scores and gyro:
     minqc = do.call(pmin,as.data.frame(eegdata[,22:36])) #minimum qc value per timestep across channels
-    gyrox = abs(eegdata$GYROX-median(eegdata$GYROX)) # absolute deviation from the median
-    gyroy = abs(eegdata$GYROY-median(eegdata$GYROY)) # absolute deviation from the median
+    gyrox = abs(eegdata$GYROX-stats::median(eegdata$GYROX)) # absolute deviation from the median
+    gyroy = abs(eegdata$GYROY-stats::median(eegdata$GYROY)) # absolute deviation from the median
     # Check for head movement: The unit of gyro is difficult to interpret
     # confirmed by http://www.bci2000.org/wiki/index.php/Contributions:Emotiv
     # no head movement seems to coincide with variations of around 4 units
@@ -53,8 +55,6 @@ clean_emotiv = function(datadir,metadatafile,outputdir,sf,gyrothreshold,mindur,k
           print(knownerrors.df[ikne[j],])
           warning(paste0("impossible start time "))
         }
-#         print(paste0(length(eegdata$quality)," ",eegdata$quality[1]," ",knownerrors.df[ikne[j],1]," ",
-#                      knownerrors.df[ikne[j],2]," ",knownerrors.df[ikne[j],3]))
         eegdata$quality[starti:endi] = 0 # data quality 0 is defined as poor
       }
     }
@@ -77,12 +77,12 @@ clean_emotiv = function(datadir,metadatafile,outputdir,sf,gyrothreshold,mindur,k
   }
   write2file = function(x,outputdir,meta,dur,epoch,protocol) {
     # x = data to be saved
-    write.csv(x,paste0(outputdir,"/eyes",protocol,"_id",meta$subject.id,"_dur",
+    utils::write.csv(x,paste0(outputdir,"/eyes",protocol,"_id",meta$subject.id,"_dur",
                        dur,"_epoch",epoch,"_gro",meta$Group,".csv"),row.names=FALSE)
     return(0)
   }
   #--------------------------------------------------------
-  metadata = read.csv(metadatafile) # get metadata
+  metadata = utils::read.csv(metadatafile) # get metadata
   fileinfo = getfileinfo(datadir) # extract id numbers from filenames
   uid = sort(unique(fileinfo$id))
   metadata = merge(metadata,fileinfo,by.y="id",by.x="subject.id") # merge with metadata
