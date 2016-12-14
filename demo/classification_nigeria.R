@@ -20,13 +20,30 @@ LAB$diagnosis = as.factor(LAB$diagnosis)
 proto_i = 1 #"eyesopen" # "open" 1 #closed 2
 logfile = "data/log_guinneabissau.csv" # not used when uselog = FALSE
 
-perid = FALSE
+aggregateperid = FALSE
 trainbestmodel = FALSE #option to turn this off for Nigeria
 
+
+# rn = rownames(LAB)
+# randomsubset = rn[round(runif(n = 12,min=1,max=length(rn)))]
+# data.labels = LAB[which(rownames(LAB) %in% randomsubset ==TRUE),]
+# data.eeg = DAT[which(DAT$fnames %in% randomsubset ==TRUE),]
+# save(data.labels,file="/home/vincent/utrecht/emotivepilepsy/data/data.labels.RData")
+# save(data.eeg,file="/home/vincent/utrecht/emotivepilepsy/data/data.eeg.RData")
+# RDL = reformat_DATLAB(data.eeg,data.labels,aggregateperid=aggregateperid) # aggregate per unique id
+# DAT =RDL$DAT
+# LAB = RDL$LAB
+# print(length(unique(LAB$id[which(LAB$diagn==2)])))
+# print(length(unique(LAB$id[which(LAB$diagn==1)])))
+# kkk
+
 # tidy up formatting to be suitable for classifier training
-RDL = reformat_DATLAB(DAT,LAB,aggregateperid=perid) # aggregate per unique id
+RDL = reformat_DATLAB(DAT,LAB,aggregateperid=aggregateperid) # aggregate per unique id
 DAT =RDL$DAT
 LAB = RDL$LAB
+
+
+
 
 #===============================================================
 # split data in training, validation and test set
@@ -38,17 +55,17 @@ modeldict = create_modeldict(DAT)
 #===============================================================
 # train models or loaded previously trained model
 if (trainbestmodel == TRUE) {
-  trainingresults = train_model(DATtrain,LABtrain,DATval,LABval,modeldict,classifier = "rf",perid=perid)
+  trainingresults = train_model(DATtrain,LABtrain,DATval,LABval,modeldict,classifier = "rf",aggregateperid=aggregateperid)
   best_model = trainingresults$best_model
   modelcomparison = trainingresults$result
   fes = trainingresults$fes
   country = "ni"
-  bestmodelfile = paste0("features_and_bestmodels/bestmodel_",proto_i,"_dur",logdur,"_country",country,"_perid",perid,".RData")
+  bestmodelfile = paste0("features_and_bestmodels/bestmodel_",proto_i,"_dur",logdur,"_country",country,"_perid",aggregateperid,".RData")
   save(best_model,fes,file=bestmodelfile) # Save best model
   rm(best_model,fes)
 } else {
   country = "gb" # load model from other country
-  bestmodelfile = paste0("features_and_bestmodels/bestmodel_",proto_i,"_dur",logdur,"_country",country,"_perid",perid,".RData")
+  bestmodelfile = paste0("features_and_bestmodels/bestmodel_",proto_i,"_dur",logdur,"_country",country,"_perid",aggregateperid,".RData")
   LABtest = rbind(LABval) # ignore test data, and only evaluate on training and validation data
   DATtest = rbind(DATval)
 }
@@ -57,4 +74,4 @@ load(bestmodelfile)
 #===============================================================
 # evaluate on test set
 test_factors = DATtest[,fes]
-evaluatemodel(model=best_model,x=test_factors,labels=LABtest,proto_i=proto_i,aggregateperid=perid)
+evaluatemodel(model=best_model,x=test_factors,labels=LABtest,proto_i=proto_i,aggregateperid=aggregateperid)

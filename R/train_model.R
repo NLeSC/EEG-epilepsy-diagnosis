@@ -1,4 +1,4 @@
-train_model = function(DATtrain,LABtrain,DATval,LABval,modeldict,classifier="rf",perid) {
+train_model = function(DATtrain,LABtrain,DATval,LABval,modeldict,classifier="rf",aggregateperid) {
   #only look for best possible wavelet type, but used all features and aggregationtypes
   testpart = c("wavelet") #,"features","aggregationtype") #,"waveletlevel"
   performancemetric = "Spec" #"Spec"
@@ -52,7 +52,7 @@ train_model = function(DATtrain,LABtrain,DATval,LABval,modeldict,classifier="rf"
       pred_val = predict(m_rf,val_factors,type="prob")
       DATval_agg = DATval
       LABval_agg = LABval
-      if (perid == FALSE) { # aggregates estimates per person
+      if (aggregateperid == FALSE) { # aggregates estimates per person
         pred_val = data.frame(pred_val,id=LABval$id)
         pred_val = aggregate(. ~ id,data=pred_val,mean)
         DATval_agg = aggregate(. ~ id,data=DATval,mean)

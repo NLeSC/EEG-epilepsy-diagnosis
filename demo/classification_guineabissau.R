@@ -14,11 +14,11 @@ for (i in funcfiles) source(i)
 proto_i = 1 #"eyesopen" #"open" =1 #closed= 2
 logfile = "features_and_bestmodels/log_guinneabissau.csv" # not used when uselog = FALSE
 
-perid = FALSE
+aggregateperid = FALSE
 trainbestmodel = FALSE #option to turn this off for Nigeria
 
 # tidy up formatting to be suitable for classifier training
-RDL = reformat_DATLAB(DAT,LAB,aggregateperid=perid) # aggregate per unique id
+RDL = reformat_DATLAB(DAT,LAB,aggregateperid=aggregateperid) # aggregate per unique id
 DAT =RDL$DAT
 LAB = RDL$LAB
 
@@ -33,17 +33,17 @@ modeldict = create_modeldict(DAT)
 #===============================================================
 # train models or loaded previously trained model
 if (trainbestmodel == TRUE) {
-  trainingresults = train_model(DATtrain,LABtrain,DATval,LABval,modeldict,classifier = "rf",perid=perid)
+  trainingresults = train_model(DATtrain,LABtrain,DATval,LABval,modeldict,classifier = "rf",aggregateperid=aggregateperid)
   best_model = trainingresults$best_model
   modelcomparison = trainingresults$result
   fes = trainingresults$fes
   country = "gb" #"gb" =  guinea bisau
-  bestmodelfile = paste0("features_and_bestmodels/bestmodel_",proto_i,"_dur",logdur,"_country",country,"_perid",perid,".RData")
+  bestmodelfile = paste0("features_and_bestmodels/bestmodel_",proto_i,"_dur",logdur,"_country",country,"_perid",aggregateperid,".RData")
   save(best_model,fes,file=bestmodelfile) # Save best model
   rm(best_model,fes)
 } else {
   country = "ni" # load model from other country
-  bestmodelfile = paste0("features_and_bestmodels/bestmodel_",proto_i,"_dur",logdur,"_country",country,"_perid",perid,".RData")
+  bestmodelfile = paste0("features_and_bestmodels/bestmodel_",proto_i,"_dur",logdur,"_country",country,"_perid",aggregateperid,".RData")
   LABtest = rbind(LABval) # ignore test data, and only evaluate on training and validation data
   DATtest = rbind(DATval)
 }
@@ -52,4 +52,4 @@ load(bestmodelfile)
 #===============================================================
 # evaluate on test set
 test_factors = DATtest[,fes]
-evaluatemodel(model=best_model,x=test_factors,labels=LABtest,proto_i=proto_i,aggregateperid=perid)
+evaluatemodel(model=best_model,x=test_factors,labels=LABtest,proto_i=proto_i,aggregateperid=aggregateperid)
