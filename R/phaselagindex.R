@@ -1,5 +1,6 @@
 phaselagindex = function(EEGdata,frequency=128) {
   inputw2 <- function(wave, f, channel=1)  { # function by w.m.otte@umcutrecht.nl (Wim Otte) 11-02-2015
+    #renamed from inputw to inputw2 because there already is a inputw function in seewave
     if(is.data.frame(wave))   {f<-f ; wave <- as.matrix(wave[,channel])}
     if(is.vector(wave))       {f<-f ; wave <- as.matrix(wave)}
     # mts objects are matrix by default, there is then a conflict between is.matrix and is.mts
