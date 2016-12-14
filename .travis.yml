@@ -9,3 +9,4 @@ addons:
   apt:
     packages:
     - libsndfile1-dev
+    - libfftw3-dev:amd64
