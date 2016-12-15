@@ -3,6 +3,7 @@ graphics.off()
 library(wavelets)
 library(pracma)
 setwd("/home/vincent/utrecht")
+shareddrive = "/media/windows-share/EEG"
 funcfiles = list.files("emotivepilepsy/R",include.dirs=TRUE,full.names = TRUE)
 for (i in funcfiles) source(i)
 
@@ -11,9 +12,9 @@ extractfeature = TRUE
 sf = 128 #sample frequency
 epochlength = 10 # in seconds
 if (doclean == TRUE) {
-  datadir =  "/media/windows-share/EEGs_Nigeria" #"data/eeg"
-  metadatafile = "/media/windows-share/merged-meta-data_nigeria.csv"
-  outputdir =  "/media/windows-share/EEGs_Nigeria_cleaned" 
+  datadir =  paste0(shareddrive,"/EEGs_Nigeria") #"data/eeg"
+  metadatafile = paste0(shareddrive,"/merged-meta-data_nigeria.csv")
+  outputdir =  paste0(shareddrive,"/EEGs_Nigeria_cleaned")
   gyrothreshold = 30 #gyro unit deviations from the median that are not tolerated
   mindur = 4 # minimum duration in minutes
   # define known errors based on Research Remarks (this is hardcoded, but could be extracted from a file in the future)
@@ -41,7 +42,7 @@ if (doclean == TRUE) {
                                                  is.na(amountdata[,2]) == FALSE)) / nrow(amountdata)))
 }
 if (extractfeature == TRUE) {
-  datadir = "/media/windows-share/EEGs_Nigeria_cleaned" 
+  datadir = paste0(shareddrive,"/EEGs_Nigeria_cleaned")
   # featurenames and wavelet filter types to be extracted:
   # fn = c("mean","sd","entropy","max","min","skewness",
   #        "median","domfreq","maxpow","zerocross","RMS","pracma.samen") # feature names ,"lyapunov"
@@ -57,5 +58,5 @@ if (extractfeature == TRUE) {
   ef = extract_features(datadir,sf,n.levels,filtertypes,epochlength,fn)
   DAT = ef$DAT
   LAB = ef$LAB
-  save(DAT,LAB,labels,file=paste0("features_and_bestmodels/features_nigeria_",epochlength,".RData"))
+  save(DAT,LAB,labels,file=paste0(shareddrive,"/features_and_bestmodels/features_nigeria_",epochlength,".RData"))
 }
