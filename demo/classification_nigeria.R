@@ -20,8 +20,8 @@ LAB$diagnosis = as.factor(LAB$diagnosis)
 proto_i = 1 #"eyesopen" # "open" 1 #closed 2
 logfile = "data/log_guinneabissau.csv" # not used when uselog = FALSE
 
-aggregateperid = FALSE
-trainbestmodel = FALSE #option to turn this off for Nigeria
+aggregateperid = TRUE
+trainbestmodel = TRUE #option to turn this off for Nigeria
 
 
 # rn = rownames(LAB)

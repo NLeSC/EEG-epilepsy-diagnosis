@@ -45,11 +45,20 @@ train_model = function(DATtrain,LABtrain,DATval,LABval,modeldict,classifier="rf"
         m_rf = caret::train(y=as.factor(make.names(DATtrain$diagnosis)),x=train_factors,#seeds=seeds,
                      method="glm",family="binomial",trControl=ctrl,tuneLength=10,metric=performancemetric) # # train 10 different mtry values using random search
       }
+      #  inspect how probabilities of classification are distributed in training set
+#       pred_train = predict(m_rf,train_factors,type="prob")
+#       print(summary(pred_train$X1))
+#       print(quantile(pred_train$X1,probs=c(seq(0.05,0.95,by=0.05))))
+#       llll
+      
       #metric="Kappa"
       #metric = "Sens"
       #===========================================================
       # apply to validation set
       pred_val = predict(m_rf,val_factors,type="prob")
+      
+      
+      #aggregate per person
       DATval_agg = DATval
       LABval_agg = LABval
       if (aggregateperid == FALSE) { # aggregates estimates per person
