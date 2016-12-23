@@ -1,4 +1,4 @@
-train_model = function(DATtrain,LABtrain,DATval,LABval,modeldict,classifier="rf",aggregateperid) {
+train_model = function(DATtrain,LABtrain,DATval,LABval,modeldict,classifier="rf") { #,aggregateperid
   #only look for best possible wavelet type, but used all features and aggregationtypes
   testpart = c("wavelet") #,"features","aggregationtype") #,"waveletlevel"
   performancemetric = "Spec" #"Spec"
@@ -22,6 +22,7 @@ train_model = function(DATtrain,LABtrain,DATval,LABval,modeldict,classifier="rf"
                         stringsAsFactors=FALSE)
     for (jj in 1:length(valueseval)) {
       result$model[cnt] = valueseval[jj]
+      
       fes = which(allvalues==valueseval[jj] | allvalues == "raw") # always add features derived from raw data
       train_factors = DATtrain[,fes]
       val_factors = DATval[,fes]
@@ -56,12 +57,10 @@ train_model = function(DATtrain,LABtrain,DATval,LABval,modeldict,classifier="rf"
       #===========================================================
       # apply to validation set
       pred_val = predict(m_rf,val_factors,type="prob")
-      
-      
       #aggregate per person
       DATval_agg = DATval
       LABval_agg = LABval
-      if (aggregateperid == FALSE) { # aggregates estimates per person
+      if (length(LABval$id) != length(unique(LABval$id))) {#aggregateperid == FALSE) { # aggregates estimates per person
         pred_val = data.frame(pred_val,id=LABval$id)
         pred_val = aggregate(. ~ id,data=pred_val,mean)
         DATval_agg = aggregate(. ~ id,data=DATval,mean)
@@ -96,7 +95,8 @@ train_model = function(DATtrain,LABtrain,DATval,LABval,modeldict,classifier="rf"
     }
     result = result[with(result,order(val.sens,val.kappa,val.auc,val.acc)),]
     print("Now train best model on training data and validation data combined")
-    fes = which(allvalues==as.character(result$model[nrow(result)]))
+    fes = which(allvalues==as.character(result$model[nrow(result)]) | allvalues == "raw")
+    
     train_factors = rbind(DATtrain[,fes],DATval[,fes]) #features of train and validation combined
     din = as.factor(c(make.names(DATtrain$diagnosis),make.names(DATval$diagnosis))) #diagnosis of train and val combined
     set.seed(300)

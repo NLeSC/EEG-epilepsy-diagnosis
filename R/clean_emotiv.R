@@ -111,6 +111,16 @@ clean_emotiv = function(datadir,metadatafile,outputdir,sf,gyrothreshold,
         amountdata[ind2,4] = 1
       }
       eegdata = read.csv(fileinfo$fnames_long[which(fileinfo$fnames_short == metadata$fnames_short[ind])])
+      removearti = function(x) {
+        dx = diff(x)
+        qt = quantile(abs(dx),probs=c(0.68),na.rm = TRUE) # assumption that at least 68% of data is not affected
+        dx[which(abs(dx) > (25 * qt))] = 0 #reset all differences larger than 25 sigma
+        x = cumsum(c(x[1],dx))
+        return(x)
+      }
+      for (j in 2:15) {
+        eegdata[,j] = removearti(eegdata[,j])
+      }
       # Only include measurements with at least mindur minutes of data:
       if (nrow(eegdata) >= (mindur * 60 * sf)) {
         # add labels to unfit parts of the data based on researcher remarks:
@@ -130,7 +140,6 @@ clean_emotiv = function(datadir,metadatafile,outputdir,sf,gyrothreshold,
               bi = which(boutdur == boutdur_long[ii])
               for (ci in bi) { #in case there are multiple bouts with the same length
                 select = (poordataindices[ci]+1):(poordataindices[ci+1]-1)
-                
                 if (protocol == "open") {
                   amountdata[ind2,1] = epoch
                   dataopen = eegdata[select,]

@@ -2,13 +2,13 @@ rm(list=ls())
 graphics.off()
 library(wavelets)
 library(pracma)
-setwd("/home/vincent/utrecht/emotivepilepsy")
+setwd("/home/vincent/utrecht")
 shareddrive = "/media/windows-share/EEG"
 funcfiles = list.files("emotivepilepsy/R",include.dirs=TRUE,full.names = TRUE)
 for (i in funcfiles) source(i)
 
-doclean = FALSE
-extractfeature = TRUE
+doclean = TRUE
+extractfeature = FALSE
 sf = 128 #sample frequency
 epochlength = 10 # in seconds
 if (doclean == TRUE) {
@@ -51,13 +51,9 @@ if (extractfeature == TRUE) {
   #                  paste0("la",seq(8,20,by=2)), #Least Aymetric
   #                  paste0("bl",c(14,18,20)), #Best localized
   #                  paste0("c",seq(6,30,by=6))) # Coiflet
-#   filtertypes =  c(paste0("d",seq(2,20,by=4)), # Daubechies
-#                    paste0("la",seq(8,20,by=2)), #Least Aymetric
-#                    paste0("bl",c(14,18,20)), #Best localized
-#                    paste0("c",seq(6,30,by=6))) # Coiflet
   filtertypes =  paste0("d",seq(2,10,by=4)) # Daubechies
   n.levels = 7
-  ef = extract_features(datadir,sf,n.levels,filtertypes,epochlength)
+  ef = extract_features(datadir,sf,n.levels,filtertypes,epochlength,fn)
   DAT = ef$DAT
   LAB = ef$LAB
   save(DAT,LAB,labels,file=paste0(shareddrive,"/features_and_bestmodels/features_ginneabissau_",epochlength,".RData"))

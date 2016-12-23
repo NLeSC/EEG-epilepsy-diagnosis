@@ -21,12 +21,12 @@ split_data = function(LAB,DAT,logfile = "log_guinneabissau.csv",proto_i= 1,split
         ids = c(ids,sample(x,size=round(split[set]/2)))
       }
       if (set == 1) { # validation
-        LABval = LAB[which(LAB$protocol == proto_i & (LAB$id %in% ids) ==TRUE),]
+        LABval = LAB[which(LAB$protocol == proto_i & (LAB$id %in% ids) == TRUE),]
         DATval = DAT[which(DAT$protocol == proto_i & (DAT$id %in% ids) == TRUE),]
         ids_val = ids
       } else if (set == 2) { # test
         ids = ids[which(ids %in% ids_val == FALSE)]
-        LABtest = LAB[which(LAB$protocol == proto_i & (LAB$id %in% ids)==TRUE),] #ep == 1
+        LABtest = LAB[which(LAB$protocol == proto_i & (LAB$id %in% ids) == TRUE),] #ep == 1
         DATtest = DAT[which(DAT$protocol == proto_i & (DAT$id %in% ids)  == TRUE),]
         ids_test = ids
       }

@@ -37,5 +37,7 @@ create_confmatrix = function(predicted,reference) {
     return(x)
   }
   confmat = makeconfmatsquare(table(predicted,reference))
+  dimnames(confmat)[[1]] = c("X1","X2")
+  dimnames(confmat)[[2]] = c("X1","X2")
   return(confmat)
 }

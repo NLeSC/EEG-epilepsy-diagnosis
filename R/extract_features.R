@@ -120,6 +120,32 @@ extract_features = function(datadir,sf,n.levels,filtertypes,epochlength,fn){
         windowdata = t(windowdata)
         wtdata = NULL
         windowdata = t(apply(windowdata,1,bf.fil,sf)) # band-pass filter each signal before performing wavelet analyses
+        # investige corrupted data
+        # removearti = function(x) {
+        #   dx = diff(x)
+        #   qt = quantile(abs(dx),probs=c(0.68)) # assumption that at least 68% of data is not affected
+        #   dx[which(abs(dx) > (25 * qt))] = 0 #reset all differences larger than 25 sigma
+        #   x = cumsum(c(x[1],dx))
+        #   return(x)
+        # }
+        # for (j in 1:14) {
+        #   windowdata[j,] = removearti(windowdata[j,])
+        # }
+        # graphics.off()
+        # pdf(file="/home/vincent/utrecht/outliercorrection.pdf")
+        # par(mfrow=c(7,2),mar=c(1,1,1,1),oma=c(1,1,1,1))
+        # cleaned = removearti(windowdata[1,])
+        # RY = range(c(cleaned,windowdata[1,]))
+        # LL = 300
+        # plot(windowdata[1,],type="l",ylim=c(c(RY[1]-LL,RY[2]+LL)))
+        # lines(cleaned,type="l",col="red")
+        # for (j in 2:14) {
+        #   cleaned = removearti(windowdata[j,])
+        #   RY = range(c(cleaned,windowdata[j,]))
+        #   plot(windowdata[j,],type="l",ylim=c(c(RY[1]-LL,RY[2]+LL)))
+        #   lines(cleaned,type="l",col="red")
+        # }
+        # dev.off()
         
 #         #explore data density:
 #         cnt = 1
@@ -145,7 +171,6 @@ extract_features = function(datadir,sf,n.levels,filtertypes,epochlength,fn){
         #1: 32-64 Hertz #2: 16-32 Hertz beta;    #3: 8-16 Hertz alpha;   #4: 4-8 Hertz theta
         #5: 2-4 Hertz delta; #6: 1-2 Hertz delta;    #7: 0.5-1 Hertz delta
         for (firi in filtertypes) { #filter types
-          
           mymra = function(x){
             out = wavelets::mra(x,filter=firi, boundary="periodic",n.levels=n.levels)
             return(unlist(c(out@D)))

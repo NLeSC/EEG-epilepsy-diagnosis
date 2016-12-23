@@ -15,13 +15,17 @@ evaluatemodel = function(model,x,labels,proto_i,aggregateperid) {
   pred_test_cat[pred_test$X2 > 0.500] = "X2"
   refe = make.names(labels_agg$diagnosis)
   predi = pred_test_cat
+  # print(predi)
+  # print(refe)
   confmat = create_confmatrix(predi,refe) 
+  
   test.confmatrix = paste0(confmat[1,1],"_",confmat[1,2],"_",confmat[2,1],"_",confmat[2,2])
   test.auc = round(auctest,digits=3)
   test.kappa = round(psych::cohen.kappa(x=confmat)$kappa,digits=3)
   test.acc = round(sum(diag(confmat)) / sum(confmat),digits=3)
-  predi = which(names(dimnames(confmat))=="predicted")
-  if (predi == 1) {  # sensitivty to detect Epilepsy
+  predij = which(names(dimnames(confmat))=="predicted")
+  if (length(predij) == 0) predij = 1
+  if (predij == 1) {  # sensitivty to detect Epilepsy
     test.sens = round(confmat[2,2] / (confmat[2,2]+confmat[1,2]),digits=3) 
   } else {
     test.sens= round(confmat[2,2] / (confmat[2,2]+confmat[2,1]),digits=3) 

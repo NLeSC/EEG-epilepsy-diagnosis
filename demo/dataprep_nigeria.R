@@ -7,7 +7,7 @@ shareddrive = "/media/windows-share/EEG"
 funcfiles = list.files("emotivepilepsy/R",include.dirs=TRUE,full.names = TRUE)
 for (i in funcfiles) source(i)
 
-doclean = TRUE
+doclean = FALSE
 extractfeature = TRUE
 sf = 128 #sample frequency
 epochlength = 10 # in seconds
@@ -53,7 +53,6 @@ if (extractfeature == TRUE) {
   #                  paste0("c",seq(6,30,by=6))) # Coiflet
   filtertypes =  paste0("d",seq(2,10,by=4)) # Daubechies
   # filtertypes =  c("d10") # Daubechies 10, because that was the winner in GB
-  
   n.levels = 7
   ef = extract_features(datadir,sf,n.levels,filtertypes,epochlength,fn)
   DAT = ef$DAT
