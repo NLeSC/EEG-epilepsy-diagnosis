@@ -7,8 +7,8 @@ shareddrive = "/media/windows-share/EEG"
 funcfiles = list.files("emotivepilepsy/R",include.dirs=TRUE,full.names = TRUE)
 for (i in funcfiles) source(i)
 
-doclean = TRUE
-extractfeature = FALSE
+doclean = FALSE
+extractfeature = TRUE
 sf = 128 #sample frequency
 epochlength = 10 # in seconds
 if (doclean == TRUE) {

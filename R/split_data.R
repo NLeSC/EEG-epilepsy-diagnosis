@@ -1,11 +1,11 @@
 split_data = function(LAB,DAT,logfile = "log_guinneabissau.csv",proto_i= 1,split=c(20,20),
-                      uselog = TRUE,logdur=4) { #,sampleidentifier="id"
+                      uselog = TRUE,logdur=4,seed=300) { #,sampleidentifier="id"
   # protocol 1 = eyes open
   # protocol 2 = eyes closed
   # diagnosis 1 = Control
   # diagnosis 2 = Epilepsy
   
-  split_data = function(LAB,DAT,proto_i,split=c(20,20)) {
+  split_data = function(LAB,DAT,proto_i,split=c(20,20),seed) {
     ids = c() # the identifiers, could be id or fnames
     for (set in 1:2) { # first select test and validation set based on split as provided in the arguments
       for (diag_i in c(1,2)) { #c("Control","Epilepsy")) {
@@ -17,7 +17,7 @@ split_data = function(LAB,DAT,logfile = "log_guinneabissau.csv",proto_i= 1,split
           if (length(which(LAB$diagnosis == diag_i)) == 0) print("patient group not in dataset")
           if (length(which((LAB$id %in% ids) == FALSE)) == 0) print("no id left")
         }
-        set.seed(300)
+        set.seed(seed)
         ids = c(ids,sample(x,size=round(split[set]/2)))
       }
       if (set == 1) { # validation
@@ -80,7 +80,7 @@ split_data = function(LAB,DAT,logfile = "log_guinneabissau.csv",proto_i= 1,split
     #     P = split_data_bypython(logfile,proto_i,logdur,split,logdur)
     #     LABval=P$LABval;LABtest=P$LABtest;LABtrain=P$LABtrain;DATval=P$DATval;DATtest=P$DATtest;DATtrain=P$DATtrain
   } else {
-    P = split_data(LAB,DAT,proto_i,split=split) #"eyesopen" #,"eyesclosed"
+    P = split_data(LAB,DAT,proto_i,split=split,seed=seed) #"eyesopen" #,"eyesclosed"
     LABval=P$LABval;LABtest=P$LABtest;LABtrain=P$LABtrain;DATval=P$DATval;DATtest=P$DATtest;DATtrain=P$DATtrain
   }
   invisible(list(LABval=LABval,LABtest=LABtest,LABtrain=LABtrain,DATval=DATval,DATtest=DATtest,DATtrain=DATtrain)) 
