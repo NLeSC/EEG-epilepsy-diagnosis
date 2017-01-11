@@ -33,7 +33,7 @@ evaluatemodel = function(model,x,labels,proto_i,aggregateperid) {
   } else {
     test.sens= round(confmat[2,2] / (confmat[2,2]+confmat[2,1]),digits=3) 
   }
-  print(paste0(proto_i," acc ",test.acc," kappa ",test.kappa," auc ",test.auc," ",test.confmatrix," sens ",test.sens ))
+  print(paste0("performance on test set: ",proto_i," acc ",test.acc," kappa ",test.kappa," auc ",test.auc," ",test.confmatrix," sens ",test.sens ))
   invisible(list(proto_i=proto_i,test.acc=test.acc,test.kappa=test.kappa,test.auc=test.auc,
             test.confmatrix=test.confmatrix,test.sens=test.sens,aggregateperid=aggregateperid))
 }

@@ -30,8 +30,8 @@ train_model = function(DATtrain,LABtrain,DATval,LABval,modeldict,classifier="rf"
       #===========================================================
       # set training paramerters
       # ctrl = trainControl(method = "none",number=10,repeats=10,search="random")
-      ctrl = caret::trainControl(method = "repeatedcv",number=5,repeats=1,search="random", #repeatedcv rather than oob?
-                          classProbs = TRUE, summaryFunction = caret::twoClassSummary) #, summaryFunction = twoClassSummary) # twoClassSummary is needed for Sensitivity optimization
+      ctrl = caret::trainControl(method = "repeatedcv",number=5,repeats=1,search="random",
+                          classProbs = TRUE, summaryFunction = caret::twoClassSummary)  # twoClassSummary is needed for Sensitivity optimization
       
       # ctrl = trainControl(method = "repeatedcv",number=10,repeats=3,search="grid")
       #===========================================================
@@ -43,7 +43,7 @@ train_model = function(DATtrain,LABtrain,DATval,LABval,modeldict,classifier="rf"
       if (classifier == "rf") {
         # random forest
         m_rf = caret::train(y=as.factor(make.names(DATtrain$diagnosis)),x=train_factors,seeds=seeds,
-                     method="rf",importance=TRUE,trControl=ctrl,tuneLength=TL,metric=performancemetric) # # train 10 different mtry values using random search
+                     method="rf",importance=TRUE,trControl=ctrl,tuneLength=TL,metric=performancemetric) # # train 5 different mtry values using random search
       }
       # imp = importance(m_rf$finalModel)
       # print(varImp(m_rf$finalModel)[1:3,])
@@ -104,7 +104,7 @@ train_model = function(DATtrain,LABtrain,DATval,LABval,modeldict,classifier="rf"
       cnt = cnt+1
     }
     result = result[with(result,order(val.sens,val.kappa,val.auc,val.acc)),]
-    print("Now train best model on training data and validation data combined")
+    print("Now train best model on training data and validation data combined ...")
     fes2 = which(allvalues==as.character(result$model[nrow(result)]) | allvalues == "raw")
     
     train_factors = DATtrain[,fes2]

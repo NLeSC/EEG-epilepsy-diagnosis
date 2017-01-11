@@ -120,49 +120,6 @@ extract_features = function(datadir,sf,n.levels,filtertypes,epochlength,fn){
         windowdata = t(windowdata)
         wtdata = NULL
         windowdata = t(apply(windowdata,1,bf.fil,sf)) # band-pass filter each signal before performing wavelet analyses
-        # investige corrupted data
-        # removearti = function(x) {
-        #   dx = diff(x)
-        #   qt = quantile(abs(dx),probs=c(0.68)) # assumption that at least 68% of data is not affected
-        #   dx[which(abs(dx) > (25 * qt))] = 0 #reset all differences larger than 25 sigma
-        #   x = cumsum(c(x[1],dx))
-        #   return(x)
-        # }
-        # for (j in 1:14) {
-        #   windowdata[j,] = removearti(windowdata[j,])
-        # }
-        # graphics.off()
-        # pdf(file="/home/vincent/utrecht/outliercorrection.pdf")
-        # par(mfrow=c(7,2),mar=c(1,1,1,1),oma=c(1,1,1,1))
-        # cleaned = removearti(windowdata[1,])
-        # RY = range(c(cleaned,windowdata[1,]))
-        # LL = 300
-        # plot(windowdata[1,],type="l",ylim=c(c(RY[1]-LL,RY[2]+LL)))
-        # lines(cleaned,type="l",col="red")
-        # for (j in 2:14) {
-        #   cleaned = removearti(windowdata[j,])
-        #   RY = range(c(cleaned,windowdata[j,]))
-        #   plot(windowdata[j,],type="l",ylim=c(c(RY[1]-LL,RY[2]+LL)))
-        #   lines(cleaned,type="l",col="red")
-        # }
-        # dev.off()
-        
-#         #explore data density:
-#         cnt = 1
-#         for (i in 1:nrow(windowdata)) {
-#           if (cnt == 1) {
-#             x11()
-#             par(mfrow=c(3,3))
-#             cnt = cnt + 1
-#           } else {
-#             cnt = cnt + 1
-#             if (cnt == 10) cnt = 1
-#           }
-#           d <- density(windowdata[i,]) # returns the density data
-#           plot(d,col="red",xlim=range(d$x),main=i) # plots the results
-#           print(paste0(i," ",mean(windowdata[i,])))
-#         }
-#         kkk
         #------------------------------------------------------------
         # Wavelets:
         #1: 32-64 samplewindow #2: 16-32 samplewindow beta; #3: 8-16 samplewindow alpha;
@@ -200,7 +157,7 @@ extract_features = function(datadir,sf,n.levels,filtertypes,epochlength,fn){
           for (ubi in unique(bands)) { 
             pli_features = phaselagindex(EEGdata=waveletdata[waveletdata$bands==ubi,which(names(waveletdata)!= "bands")],frequency=128)
             pli_features = as.data.frame(pli_features)
-            names(pli_features) = paste0(names(pli_features),".",firi,".",n.levels) #,".",windowcnti)
+            names(pli_features) = paste0(names(pli_features),".",firi,".",ubi) #,".",windowcnti)
             matchcolumns = which(names(S) %in% names(pli_features) == TRUE)
             if (length(matchcolumns) > 0) { 
               S[windowcnt,matchcolumns] = pli_features
@@ -208,30 +165,6 @@ extract_features = function(datadir,sf,n.levels,filtertypes,epochlength,fn){
               S = cbind(S,pli_features)
             }
           }
-          #         print("0000")
-          #         t1 = Sys.time()
-          #         avg = ddply( waveletdata, .(bands), phaselagindex)
-          #         t2 = Sys.time()
-          #         print(t1 - t0)
-          #         print(t2 - t1)
-          #         ddply( total.epochs, .( sampling.freq, epoch.length.in.sec, subject, period ), summarise, 
-          #                connectivity.mean = mean( connectivity, na.rm = TRUE ), connectivity.sd = sd( connectivity, na.rm = TRUE ) )
-          # I tried to speed up the above with vapply, but code was not faster
-          #         conwav = function(x,firi,n.levels) {
-          #           plimatrix = phaselagindex(EEGdata=x,frequency=128) #[waveletdata$bands==x,which(names(waveletdata)!= "bands")]
-          #           pli_features = data.frame(meanpli=mean(plimatrix),sdpli=sd(plimatrix))
-          #           # names(pli_features) = paste0(names(pli_features),".",firi,".",n.levels)
-          #           return(pli_features)
-          #         }
-          #         df = waveletdata[,1:14]
-          #         indx <- waveletdata$bands
-          #         print(firi)
-          #         out = lapply(unique(indx), function(x) {
-          #           ii <- which(indx %in% x) 
-          #           conwav(x=df[ii, ])})
-          #         out2 = do.call(cbind.data.frame, out)
-          #         G = cbind(G,out2)
-          # t3 = Sys.time()
           # Other features (based on wavelets)
           for (featuresi in fn) { # features to summarize wavelets
             A = getfeatures(x=waveletdata,fns=featuresi)

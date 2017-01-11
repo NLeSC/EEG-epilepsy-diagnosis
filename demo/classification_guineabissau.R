@@ -7,11 +7,11 @@ shareddrive = "/media/windows-share/EEG"
 funcfiles = list.files("emotivepilepsy/R",include.dirs=TRUE,full.names = TRUE)
 for (i in funcfiles) source(i)
 
-trainbestmodel = TRUE #option to turn this off for Nigeria
-for (aggregateperid in c(TRUE)) { #FALSE
+trainbestmodel = FALSE #option to turn this off for Nigeria
+for (aggregateperid in c(FALSE,TRUE)) { #FALSE
   for (proto_i in  2:1) { #"open" =1 #closed= 2
     evse = c()
-    seeds2try = seq(100,1000,by=100)
+    seeds2try = seq(100,1000,by=50)
     for (seed in seeds2try) { #try five seeds and select the median performing model in the test set for replication in other country
       logfile = "features_and_bestmodels/log_guinneabissau.csv" # not used when uselog = FALSE
       load(file=paste0(shareddrive,"/features_and_bestmodels/features_ginneabissau_10.RData")); logdur = 10
@@ -48,10 +48,10 @@ for (aggregateperid in c(TRUE)) { #FALSE
         for (k in  1: length(seeds2try)) {
           bestmodelfile = paste0(shareddrive,"/features_and_bestmodels/bestmodel_",proto_i,"_dur",
                                  logdur,"_country",country,"_perid",aggregateperid,"_seed",seeds2try[k],".RData")
-          if (file.exists(bestmodelfile)) load(bestmodelfile)
+          if (file.exists(bestmodelfile)) {
+            load(bestmodelfile)
+          }
         }
-        LABtest = LABval # LABtest = rbind(LABval) # ignore test data, and only evaluate on training and validation data
-        DATtest = DATval # DATtest = rbind(DATval)
       }
       #===============================================================
       # evaluate model on test set
@@ -69,16 +69,18 @@ for (aggregateperid in c(TRUE)) { #FALSE
     evse = as.data.frame(evse,row.names = make.names(1:nrow(evse)))
     evse <- as.data.frame(lapply(evse, unlist))
     evse = evse[with(evse,order(test.sens,test.kappa,test.auc,test.acc)),]
-
-    medianseed = evse$seed[round(nrow(evse)/2)]
-    seeds2delete = seeds2try[which(seeds2try != medianseed)]
-    for (g in 1:length(seeds2delete)) {
-      file.remove(paste0(shareddrive,"/features_and_bestmodels/bestmodel_",proto_i,"_dur",
-                         logdur,"_country",country,"_perid",aggregateperid,"_seed",seeds2delete[g],".RData"))
-    }
+    
+    # if (trainbestmodel == TRUE) {
+    #   medianseed = evse$seed[round(nrow(evse)/2)]
+    #   seeds2delete = seeds2try[which(seeds2try != medianseed)]
+    #   for (g in 1:length(seeds2delete)) {
+    #     file.remove(paste0(shareddrive,"/features_and_bestmodels/bestmodel_",proto_i,"_dur",
+    #                        logdur,"_country",country,"_perid",aggregateperid,"_seed",seeds2delete[g],".RData"))
+    #   }
+    # }
     print(evse)
     # store seed evaluation
     save(evse,file=paste0(shareddrive,"/features_and_bestmodels/seedcomparison_",proto_i,"_dur",
-                               logdur,"_country",country,"_perid",aggregateperid,".RData"))
+                          logdur,"_country",country,"_perid",aggregateperid,"_evalcountry",evaluation$country,".RData"))
   }
 }
