@@ -93,6 +93,9 @@ clean_emotiv = function(datadir,metadatafile,outputdir,sf,gyrothreshold,
     warning('metadata needs to have subject.id and Group in variable names')
   }
   print(paste("N unique ids: ",paste(length(uid))))
+  
+  count_artificatcorrections = 0
+  count_healthy = 0
   for (i in uid) { # loop over unique id numbers derived from eeg files
     ind2 = which(uid == i)  #index in the unique eegdata ids
     if (cnt == 10) {   # print progress after every 5 files
@@ -118,9 +121,34 @@ clean_emotiv = function(datadir,metadatafile,outputdir,sf,gyrothreshold,
         x = cumsum(c(x[1],dx))
         return(x)
       }
+      eegdatabefore = eegdata
       for (j in 2:15) {
         eegdata[,j] = removearti(eegdata[,j])
       }
+      if (length(which((eegdata[,2:15] == eegdatabefore[,2:15]) == FALSE) > 0)) {
+        count_artificatcorrections = count_artificatcorrections + 1
+      } else {
+        count_healthy = count_healthy + 1
+      }
+      print(paste0("C ",count_artificatcorrections," H ",count_healthy))
+      # path = "/media/windows-share/EEG/features_and_bestmodels/"
+      # outfile = paste0(path,paste0("Figure1_artifactcorretion.jpeg"))
+      # jpeg(filename=outfile, units="in",width = 3.5,height= 3.5,res=500,pointsize=10)
+      # par(oma=c(0,0,0,0),mar=c(2,2,2,2))
+      # channeli = 5
+      # par(mfrow=c(2,1))
+      # YLIM = range(eegdatabefore[,channeli],eegdata[,channeli])
+      # YLIM[1] = YLIM[1] - (abs(YLIM[1]) * 0.1)
+      # YLIM[2] = YLIM[2] + (abs(YLIM[2]) * 0.1)
+      # plot(eegdatabefore[,channeli],lty=1,lwd=0.9,main="before correction",
+      #      type="l",xlab="sample",ylab=expression(paste(mu,"Volt")),bty="n",cex.lab=0.7,
+      #      ylim=YLIM)
+      # plot(eegdata[,channeli],lty=1,lwd=0.9,main="after correction",
+      #      type="l",xlab="sample",ylab=expression(paste(mu,"Volt")),bty="n",cex.lab=0.7,
+      #      ylim=YLIM)
+      # dev.off()
+      # 
+      # kk
       # Only include measurements with at least mindur minutes of data:
       if (nrow(eegdata) >= (mindur * 60 * sf)) {
         # add labels to unfit parts of the data based on researcher remarks:

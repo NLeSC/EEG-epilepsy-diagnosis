@@ -1,7 +1,7 @@
 train_model = function(DATtrain,LABtrain,DATval,LABval,modeldict,classifier="rf") { #,aggregateperid
   #only look for best possible wavelet type, but used all features and aggregationtypes
   testpart = c("wavelet") #,"features","aggregationtype") #,"waveletlevel"
-  performancemetric = "Spec" #"Spec"
+  performancemetric = "Accuracy" #"Spec" #Specificiaty to detect Control, equal sensitivity to detect epilepsy"
   for (testparti in testpart) {
     cnt = 1
     set.seed(300)
@@ -22,48 +22,26 @@ train_model = function(DATtrain,LABtrain,DATval,LABval,modeldict,classifier="rf"
                         stringsAsFactors=FALSE)
     for (jj in 1:length(valueseval)) {
       result$model[cnt] = valueseval[jj]
-      
       fes = which(allvalues==valueseval[jj] | allvalues == "raw") # always add features derived from raw data
-      # print(fes)
       train_factors = DATtrain[,fes]
       val_factors = DATval[,fes]
       #===========================================================
       # set training paramerters
       # ctrl = trainControl(method = "none",number=10,repeats=10,search="random")
       ctrl = caret::trainControl(method = "repeatedcv",number=5,repeats=1,search="random",
-                          classProbs = TRUE, summaryFunction = caret::twoClassSummary)  # twoClassSummary is needed for Sensitivity optimization
+                          classProbs = TRUE) #, summaryFunction = caret::prSummary) #twoClassSummary)  # twoClassSummary is needed for Sensitivity optimization
       
       # ctrl = trainControl(method = "repeatedcv",number=10,repeats=3,search="grid")
       #===========================================================
       # train on training set
       set.seed(300)
-      TL = 5
+      TL = 3
       seeds <- vector(mode = "list", length = TL)#
       for(i in 1:TL) seeds[[i]] <- 300
       if (classifier == "rf") {
-        # random forest
         m_rf = caret::train(y=as.factor(make.names(DATtrain$diagnosis)),x=train_factors,seeds=seeds,
                      method="rf",importance=TRUE,trControl=ctrl,tuneLength=TL,metric=performancemetric) # # train 5 different mtry values using random search
       }
-      # imp = importance(m_rf$finalModel)
-      # print(varImp(m_rf$finalModel)[1:3,])
-      # what is differenc: m_rf$finalModel$importance and importance(m_rf$finalModel)?
-      # imp = as.data.frame(imp)
-      # imp2 = imp[order(-imp$%IncMSE),] # Mean Decrease Accuracy indicates drop in Accuracy if this variable was left out
-      # print(importance(m_rf))
-      # print(importance(m_rf$finalModel))
-      if (classifier == "lg") {
-        m_rf = caret::train(y=as.factor(make.names(DATtrain$diagnosis)),x=train_factors,#seeds=seeds,
-                     method="glm",importance=TRUE,family="binomial",trControl=ctrl,tuneLength=10,metric=performancemetric) # # train 10 different mtry values using random search
-      }
-      #  inspect how probabilities of classification are distributed in training set
-#       pred_train = predict(m_rf,train_factors,type="prob")
-#       print(summary(pred_train$X1))
-#       print(quantile(pred_train$X1,probs=c(seq(0.05,0.95,by=0.05))))
-#       llll
-      
-      #metric="Kappa"
-      #metric = "Sens"
       #===========================================================
       # apply to validation set
       pred_val = predict(m_rf,val_factors,type="prob")
@@ -77,7 +55,7 @@ train_model = function(DATtrain,LABtrain,DATval,LABval,modeldict,classifier="rf"
         LABval_agg = aggregate(. ~ id,data=LABval,function(x){x[1]})
       }
       result.roc <- pROC::roc(DATval_agg$diagnosis, pred_val$X1) # X1 is the control group
-      aucval = result.roc$auc
+      aucval = as.numeric(result.roc$auc)
       result.coords <- pROC::coords(result.roc, "best", best.method="closest.topleft", ret=c("threshold", "accuracy"))
       pred_val_cat = rep("X1",nrow(pred_val))
       pred_val_cat[pred_val$X2 > 0.500] = "X2" #"Epilepsy"
@@ -96,35 +74,23 @@ train_model = function(DATtrain,LABtrain,DATval,LABval,modeldict,classifier="rf"
       }
       result$val.sens[cnt] = sens
       #===================================================================
-      print(paste0(valueseval[jj]," validation Kappa: ",result$val.kappa[cnt],
-                   " validation accuracy: ",result$val.acc[cnt],
-                   " validation auc: ",result$val.auc[cnt],
-                   " conf matrix: ",result$val.confmatrix[cnt],
-                   " validation sens: ",result$val.sens[cnt]))
+      # print(paste0("validation: ",valueseval[jj]," accuracy ",result$val.acc[cnt]," kappa ",result$val.kappa[cnt]))
+      print(paste0("validation: ",valueseval[jj]," accuracy ",result$val.acc[cnt]," kappa ",result$val.kappa[cnt],
+                   " auc ",result$val.auc[cnt]," sens ",result$val.sens[cnt], " conf matrix ",result$val.confmatrix[cnt]))
       cnt = cnt+1
     }
-    result = result[with(result,order(val.sens,val.kappa,val.auc,val.acc)),]
+    result = result[with(result,order(val.acc,val.kappa,val.auc,val.sens)),]
     print("Now train best model on training data and validation data combined ...")
     fes2 = which(allvalues==as.character(result$model[nrow(result)]) | allvalues == "raw")
-    
-    train_factors = DATtrain[,fes2]
-    din = as.factor(make.names(DATtrain$diagnosis))
-    
-    # train_factors = rbind(DATtrain[,fes2],DATval[,fes2]) #features of train and validation combined
-    # din = as.factor(c(make.names(DATtrain$diagnosis),make.names(DATval$diagnosis))) #diagnosis of train and val combined
-    
-    
+    # train_factors = DATtrain[,fes2]
+    # din = as.factor(make.names(DATtrain$diagnosis))
+    train_factors = rbind(DATtrain[,fes2],DATval[,fes2]) #features of train and validation combined
+    din = as.factor(c(make.names(DATtrain$diagnosis),make.names(DATval$diagnosis))) #diagnosis of train and val combined
     set.seed(300)
-    # train 10 different mtry values using random search
     if (classifier == "rf") {
       best_model = caret::train(y=din,x=train_factors,seeds=seeds,
-                                      method="rf",importance=TRUE,metric=performancemetric,trControl=ctrl,tuneLength=10) 
-    }
-    if (classifier == "lg") {
-      best_model = caret::train(y=din,x=train_factors,#seeds=seeds,
-                                      method="glm",importance=TRUE,metric=performancemetric,family="binomial",trControl=ctrl,tuneLength=10)
+                                      method="rf",importance=TRUE,trControl=ctrl,tuneLength=TL,metric=performancemetric) 
     }
   }
-  # print(fes2)
   invisible(list(result=result,best_model=best_model,fes=fes2,winningmodel=as.character(result$model[nrow(result)])))
 }

@@ -3,15 +3,15 @@ evaluatemodel = function(model,x,labels,proto_i,aggregateperid) {
   # labels is labels for evaluation data
   pred_test = predict(model, x,type="prob")
   labels_agg = labels
-  # x_agg = x
+  x_agg = x
   if (aggregateperid == FALSE) {
     pred_test = data.frame(pred_test,id=labels$id)
     pred_test = stats::aggregate(. ~ id,data=pred_test,mean)
-    # x_agg = aggregate(. ~ id,data=x,mean) #new
+    x_agg = aggregate(. ~ id,data=x,mean) #new
     labels_agg = stats::aggregate(. ~ id,data=labels,function(x){x[1]})
   }
-  result.roc <- pROC::roc(labels_agg$diagnosis, pred_test$X1)
-  # result.roc <- pROC::roc(x_agg$diagnosis, pred_test$X1)
+  # result.roc <- pROC::roc(labels_agg$diagnosis, pred_test$X1)
+  result.roc <- pROC::roc(x_agg$diagnosis, pred_test$X1)
   auctest = result.roc$auc
   result.coords <- pROC::coords(result.roc, "best", best.method="closest.topleft", ret=c("threshold", "accuracy"))
   pred_test_cat = rep("X1",nrow(pred_test))
