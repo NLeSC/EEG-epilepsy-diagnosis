@@ -119,7 +119,7 @@ extract_features = function(datadir,sf,n.levels,filtertypes,epochlength,fn){
         windowdata = cleaneddata[(((windowi-1) * siglen) + 1):(siglen*windowi),2:15] # we are only interested in these columns
         windowdata = t(windowdata)
         wtdata = NULL
-        windowdata = t(apply(windowdata,1,bf.fil,sf)) # band-pass filter each signal before performing wavelet analyses
+        windowdata = t(apply(windowdata,1,bf.fil,sf)) # subtract signal mean before performing wavelet analyses
         #------------------------------------------------------------
         # Wavelets:
         #1: 32-64 samplewindow #2: 16-32 samplewindow beta; #3: 8-16 samplewindow alpha;

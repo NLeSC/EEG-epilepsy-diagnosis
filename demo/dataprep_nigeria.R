@@ -34,8 +34,13 @@ for (epochlength in c(10,4)) { # in seconds
     condition_start_closed = "closed"
     protocolvariable = "first_condition"
     protocoltimes = c(30,150,270) # in seconds
-    amountdata = clean_emotiv(datadir,metadatafile,outputdir,sf,gyrothreshold,mindur,knownerrors,
+    clean_stats = clean_emotiv(datadir,metadatafile,outputdir,sf,gyrothreshold,mindur,knownerrors,
                               protocoltimes,referencegroup,condition_start_closed,protocolvariable)
+    amountdata = clean_stats$amountdata
+    correction_overview_open = clean_stats$correction_overview_open
+    correction_overview_closed = clean_stats$correction_overview_closed
+    save(correction_overview_open,correction_overview_closed,
+         file=paste0(shareddrive,"/features_and_bestmodels/correctionoverview_nigeria_",epochlength,".RData"))
     print(paste0("successful open: ",length(which(is.na(amountdata[,1]) == FALSE)) / nrow(amountdata)))
     print(paste0("successful closed: ",length(which(is.na(amountdata[,2]) == FALSE)) / nrow(amountdata)))
     print(paste0("succesful both: ",length(which(is.na(amountdata[,1]) == FALSE &
