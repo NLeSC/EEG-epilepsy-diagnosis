@@ -1,4 +1,8 @@
 create_modeldict = function(DAT) {
+  namesofplifeatures = c("meanpli","sdpli","ninetyppli","densitypli","maxdegreepli",
+                    "maxstrengthpli","mpli","diameterpli","leafnumberpli","maxbcpli",
+                         "eccpli","radiuspli","Thpli","kappapli")
+    
   getfeaturetype = function(x) {
     tt = unlist(strsplit(x,"[.]"))
     if (length(tt) >= 4) {
@@ -13,7 +17,7 @@ create_modeldict = function(DAT) {
     if (length(tt) >= 4) {
       tt = tt[length(tt)-1]
     } else {
-      if (tt[1] == "meanpli" | tt[1] == "sdpli" | tt[1] == "ninetyppli") {
+      if (length(which(tt[1] %in% namesofplifeatures == TRUE)) > 0) {
         tt = tt[2]
       } else {
         tt = "na"
@@ -26,7 +30,7 @@ create_modeldict = function(DAT) {
     if (length(tt) >= 4) {
       tt = tt[1]
     } else {
-      if (tt[1] == "meanpli" | tt[1] == "sdpli" | tt[1] == "ninetyppli") {
+      if (length(which(tt[1] %in% namesofplifeatures == TRUE)) > 0) {
         tt = tt[3]
         if (tt == "notapplicable") tt = 0
       } else {
