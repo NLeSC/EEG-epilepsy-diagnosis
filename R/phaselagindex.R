@@ -36,5 +36,57 @@ phaselagindex = function(EEGdata,frequency=128) {
       plimatrix[i,j] = pli(EEGdata[,i], EEGdata[,j], f =frequency)
     }
   }
-  invisible(list(meanpli=mean(plimatrix),sdpli=sd(plimatrix),ninetyppli=as.numeric(quantile(abs(plimatrix),probs=0.9))))
+  
+  output = list(meanpli=mean(plimatrix),sdpli=sd(plimatrix),ninetyppli=as.numeric(quantile(abs(plimatrix),probs=0.9)))
+  #==========================
+  # extra pli features
+  # check
+  if( mean( plimatrix, na.rm = T ) != 0 )  {
+    plimatrix2 = plimatrix
+    diag(plimatrix2) = 0
+    plimatrix2[is.na(plimatrix2)] = 0
+    
+    g <- getgraph(plimatrix2) # get weighted graph
+    mst.g <- getmst( g ) # get binary mst
+    max.bc <- max( igraph::betweenness( mst.g ) )
+    max.degree <- max( igraph::degree( mst.g ) ) # get max degree
+    max.strength <- max( igraph::strength( mst.g ) ) # get max strength
+    leafnumber <- sum( igraph::degree( mst.g ) == 1 ) # get leaf-number (e.g. nodes with degree 1 )
+    m <- length( igraph::V( mst.g ) ) - 1 # get m (links)
+    diameter <- m - leafnumber + 2 # get diameter
+    ecc <- mean( igraph::eccentricity( mst.g ) ) # mean eccentricity
+    radius <- igraph::radius( mst.g ) # smallest eccentricity
+    Th <- leafnumber / ( 2 * m * max.bc ) # tree hierarchy
+    kappa <- mean( igraph::degree( mst.g )^2 ) / mean( igraph::degree( mst.g ) ) # kappa
+    density <- getdensity( plimatrix )  # get density
+    d <- data.frame(densitypli = density, maxdegreepli = max.degree, 
+                    maxstrengthpli = max.strength, mpli = m, diameterpli = diameter, leafnumberpli = leafnumber, maxbcpli = max.bc,
+                    eccpli = ecc, radiuspli = radius, Thpli = Th, kappapli = kappa )    
+    # print(d)
+    # lll
+    # # properties for each node
+    # print(dim(plimatrix))
+    # out <- realproperties( plimatrix )
+    # rout <- randomproperties( plimatrix, nrandom = 10)
+    # kkk
+    # # summarized properties for entire network
+    # datareal = colMeans( out, na.rm = T )
+    # datarandom = rowMeans( sapply( rout, colMeans, na.rm = T ) )
+    # str <- datareal[[ 's' ]]
+    # lambda <- datareal[[ 'paths' ]] / datarandom[[ 'paths' ]]
+    # gamma <- datareal[[ 'clustering' ]] / datarandom[[ 'clustering' ]]
+    # d <- data.frame( subject, mod, density = density, strength = str, lambda = lambda, gamma = gamma, max.degree = max.degree, 
+    #                  max.strength = max.strength, m = m, diameter = diameter, leafnumber = leafnumber, max.bc = max.bc,
+    #                  ecc = ecc, radius = radius, Th = Th, kappa = kappa )
+    
+    # final <- rbind( final, d )
+    dlist <- as.list(d)
+    output = append(output,dlist)
+    invisible(output)
+  } else {
+    print( paste( "*** PROBLEM with: ", infile, "!" ) )
+    invisible(output)
+  }
+  #==========================
+  # invisible(list(meanpli=mean(plimatrix),sdpli=sd(plimatrix),ninetyppli=as.numeric(quantile(abs(plimatrix),probs=0.9))))
 }

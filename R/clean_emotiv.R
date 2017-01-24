@@ -83,6 +83,8 @@ clean_emotiv = function(datadir,metadatafile,outputdir,sf,gyrothreshold,
     return(0)
   }
   #--------------------------------------------------------
+  extract_country = as.character(unlist(strsplit(outputdir,"/")))
+  extract_country = extract_country[length(extract_country)]
   metadata = utils::read.csv(metadatafile) # get metadata
   fileinfo = getfileinfo(datadir) # extract id numbers from filenames
   uid = sort(unique(fileinfo$id))
@@ -97,7 +99,7 @@ clean_emotiv = function(datadir,metadatafile,outputdir,sf,gyrothreshold,
   
   count_artificatcorrections = 0
   count_healthy = 0
-  correction_overview_open = correction_overview_closed = matrix(NA,length(uid),14)
+  correction_overview = matrix(NA,length(uid),14)
   
   for (i in uid) { # loop over unique id numbers derived from eeg files
     
@@ -133,16 +135,14 @@ clean_emotiv = function(datadir,metadatafile,outputdir,sf,gyrothreshold,
           dx = diff(x)
           qt = quantile(abs(dx),probs=c(0.68),na.rm = TRUE) # assumption that at least 68% of data is not affected
           ww = which(abs(dx) > (5 * qt))
-          # print(length(ww))
           dx[ww] = 0 #reset all differences larger than 25 sigma
           x = cumsum(c(x[1],dx))
-          x = x - zoo::rollmedian(x,k=((sf*4)+1),align="center",
-                                  fill=c(median(x[1:(4*sf)]),NA,median(x[(length(x)-(4*sf)):length(x)])))
+          x = x - zoo::rollmedian(x,k=((sf*10)+1),align="center",
+                                  fill=c(median(x[1:(sf*10)]),NA,median(x[(length(x)-(sf*10)):length(x)])))
           return(x)
         }
         eegdatabefore = eegdata
         windowdata = eegdata[,2:15]
-        
         windowdata = apply(windowdata,2,removearti) # subtract mean
         mymra = function(x){
           out = wavelets::mra(x,filter="d6", boundary="periodic",n.levels=7)
@@ -154,10 +154,6 @@ clean_emotiv = function(datadir,metadatafile,outputdir,sf,gyrothreshold,
         n.levels = 7
         bands = c(rep(1:n.levels,each=siglen))  
         waveletdata$bands = bands
-        pdffile= as.character(unlist(strsplit(outputdir,"/")))
-        pdffile = paste0(pdffile[1:length(pdffile)-1],collapse="/")
-        pdffile = paste0(pdffile,"/pdfs/rawdata_inspection_id",i,".pdf")
-        pdf(file=pdffile,width = 7,height = 7)
         wncount = 1
         for (j in 1:14) {
           eegdata[,j+1] = eegdata[,j+1] - median(eegdata[,j+1])
@@ -165,45 +161,55 @@ clean_emotiv = function(datadir,metadatafile,outputdir,sf,gyrothreshold,
           YLIM[1] = YLIM[1] - (abs(YLIM[1]) * 0.3)
           YLIM[2] = YLIM[2] + (abs(YLIM[2]) * 0.3)
           if (wncount == 1) {
-            par(mfrow=c(7,2),mar=c(2,3,2,0),mgp=c(1.5,0.5,0),oma=rep(0,4))
+            pngfile= as.character(unlist(strsplit(outputdir,"/")))
+            pngfile = paste0(pngfile[1:length(pngfile)-1],collapse="/")
+            
+            pngfile = paste0(pngfile,"/images/",extract_country,"_rawdata_inspection_id",i,"_file",ceiling(j/7),".png")
+            png(file=pngfile,width = 7,height = 7,units="in",res=300)
+            par(mfrow=c(7,2),mar=c(2,2,1.5,0),mgp=c(1,0.5,0),oma=rep(0,4))
             wncount = 2
           }
           if (j == 7) wncount = 1
           CX = 0.7
+          lwdX = 0.4
           time  = (1:nrow(windowdata)) / sf
-          plot(time,eegdata[,j+1],type="l",col="red",ylim=c(-600,650),xlab="time (sec)",ylab="microVolt",
-               main=paste0("channel ",j," range:",round(min(eegdata[,j+1]),digits=0),
-                           " ",round(max(eegdata[,j+1]),digits=0)),
-               cex.main=CX,lwd=0.5,cex=CX,cex.axis=CX,cex.lab=CX,bty="l")
-          lines(time,windowdata[,j],type="l",col="black")
+          plot(time,eegdata[,j+1],type="l",col="red",ylim=c(-600,850),xlab="time (sec)",ylab="microVolt",
+               main=paste0("channel ",names(eegdata)[j+1]),cex.main=CX,lwd=lwdX,cex=CX,cex.axis=CX,cex.lab=CX,bty="l")
+          lines(time,windowdata[,j],type="l",lwd=lwdX,col="black")
           qc1line = eegdata$quality
-          qc1line[which(qc1line == 0)] = 625
+          qc1line[which(qc1line == 0)] = -525
           qc1line[which(qc1line == 1)] = NA # we do not want to highlight the good data
-          lines(time,qc1line,lwd=3,type="l",col="red",lend=2)
+          lines(time,qc1line,lwd=2,type="l",col="blue",lend=2)
           qc2line = rep(NA,nrow(eegdata))
-          arti = which(abs(eegdata[,j+1]) > (5*sd(windowdata[,j])) | abs(eegdata[,j+1]) > 300)
-          qc2line[arti] = 625 # highlight all parts 
-          lines(time,qc2line,lwd=3,type="l",col="green",lend=2)
-          eegdata$quality[arti] = 1
+          arti = which(abs(abs(eegdata[,j+1]) - abs(windowdata[,j]))  > (2*sd(windowdata[,j]))) #| abs(eegdata[,j+1]) > 300
+          if (length(arti) > 0) {
+            qc2line[arti] = -525 # highlight all parts 
+            lines(time,qc2line,lwd=2,type="l",col="green",lend=2)
+            legend("topright",legend=c("raw EEG","corrected EEG","moving / qc<3 / protocol error","artifacts"),col=c("red","black","blue","green"),
+                   lwd=c(0.5,0.5,2,2),cex=0.4,ncol=4,lty=rep(1,4),bg="white",box.lwd=0.3)
+            eegdata$quality[arti] = 0
+            correction_overview[ind2,j] = 1
+          } else {
+            correction_overview[ind2,j] = 0
+          }
           for (bandi in 1:n.levels) {
-            
             wx = waveletdata[which(waveletdata$bands == bandi),j]
-            YLIM = c(-200,800) #range(wx)
-            # YLIM[1] = YLIM[1] - (abs(YLIM[1]) * 0.3)
-            # YLIM[2] = YLIM[2] + (abs(YLIM[2]) * 0.3)
+            YLIM = c(-100,700) #range(wx)
             if (bandi == 1) {
             plot(time,wx,xlab="time (sec)",
-                 type="l",col="black",main="wavelets",ylim=YLIM,ylab="",axes=FALSE,#xlab="time",
-                 cex.main=CX,lwd=0.5,cex=CX,cex.axis=CX,cex.lab=CX)
+                 type="l",col="black",
+                 main=paste0("wavelets (short@bottom, long@top) from corrected EEG channel ",names(eegdata)[j+1]),
+              ylim=YLIM,ylab="",axes=FALSE,#xlab="time",
+                 cex.main=CX,lwd=lwdX,cex=CX,cex.axis=CX,cex.lab=CX)
               nx = seq(0,250,by=50)
               axis(1,at=nx,ps=nx,cex.axis=CX)
             } else {
               lines(time,wx + (100*(bandi-1)),xlab="time (sec)",
-                   type="l",col="black",lwd=0.5,cex=CX,cex.axis=CX,cex.lab=CX)
+                   type="l",col="black",lwd=lwdX,cex=CX,cex.axis=CX,cex.lab=CX)
             }
           }
+          if (j == 14 | j ==7) dev.off()
         }
-        dev.off()
         #===================================
         # investigate length of healthy time segments per protocol and
         # export longest continuous healthy protocol part to a csv
@@ -212,42 +218,22 @@ clean_emotiv = function(datadir,metadatafile,outputdir,sf,gyrothreshold,
           boutdur = diff(poordataindices) #lengths of good bouts
           atleast4sec = which(boutdur > sf *mindur)
           if (length(atleast4sec) > 0) {
+            # print("sufficient data") #no data is saved
             boutdur_long = boutdur[atleast4sec]
             epoch = 1
             for (ii in 1:length(boutdur_long)) { # loop through all long bouts of healthy data
               bi = which(boutdur == boutdur_long[ii])
               for (ci in bi) { #in case there are multiple bouts with the same length
                 select = (poordataindices[ci]+1):(poordataindices[ci+1]-1)
-                
-                kkk
-                lll
                 if (protocol == "open") {
                   amountdata[ind2,1] = epoch
                   dataopen = eegdata[select,]
-                  # # remove artifacts and keep track of when this is done
-                  # dataopenbefore = dataopen
-                  # for (j in 2:15) {
-                  #   dataopen[,j] = removearti(dataopen[,j])
-                  #   if (length(which((dataopen[,j] == dataopenbefore[,j]) == FALSE) > 0)) {
-                  #     correction_overview_open[ind2,j-1] = 1
-                  #   } else {
-                  #     correction_overview_open[ind2,j-1] = 0
-                  #   }
-                  # }
+                 
                   write2file(x=dataopen,outputdir,meta=metadata[ind,],dur = floor(boutdur_long[ii]/sf),epoch,protocol) 
                 } else if (protocol == "closed") {
                   amountdata[ind2,2] = epoch
                   dataclosed = eegdata[select,]
-                  # # remove artifacts and keep track of when this is done
-                  # dataclosedbefore = dataclosed
-                  # for (j in 2:15) {
-                  #   dataclosed[,j] = removearti(dataclosed[,j])
-                  #   if (length(which((dataclosed[,j] == dataclosedbefore[,j]) == FALSE) > 0)) {
-                  #     correction_overview_closed[ind2,j-1] = 1
-                  #   } else {
-                  #     correction_overview_closed[ind2,j-1] = 0
-                  #   }
-                  # }
+                  # remove artifacts and keep track of when this is done
                   write2file(x=dataclosed,outputdir,meta=metadata[ind,],dur = floor(boutdur_long[ii]/sf),epoch,protocol) 
                   
                 }
@@ -262,5 +248,5 @@ clean_emotiv = function(datadir,metadatafile,outputdir,sf,gyrothreshold,
       }
     }
   }
-  invisible(list(amountdata=amountdata,correction_overview_open=correction_overview_open,correction_overview_closed=correction_overview_closed))
+  invisible(list(amountdata=amountdata,correction_overview=correction_overview))
 }

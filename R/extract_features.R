@@ -194,7 +194,6 @@ extract_features = function(datadir,sf,n.levels,filtertypes,epochlength,fn){
           S$window[windowcnt] = windowi
           S$fnames[windowcnt] = files_short[i]
         }
-        
       }
     }
     
