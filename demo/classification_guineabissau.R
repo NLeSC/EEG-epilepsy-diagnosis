@@ -7,7 +7,7 @@ shareddrive = "/media/windows-share/EEG"
 funcfiles = list.files("emotivepilepsy/R",include.dirs=TRUE,full.names = TRUE)
 for (i in funcfiles) source(i)
 
-trainbestmodel = FALSE
+trainbestmodel = TRUE
 for (epochlength in c(4)) { # in seconds
   for (aggregateperid in c(TRUE,FALSE)) { #FALSE
     for (proto_i in  2:1) { #"open" =1 #closed= 2

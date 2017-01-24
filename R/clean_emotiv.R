@@ -138,7 +138,7 @@ clean_emotiv = function(datadir,metadatafile,outputdir,sf,gyrothreshold,
           dx[ww] = 0 #reset all differences larger than 25 sigma
           x = cumsum(c(x[1],dx))
           x = x - zoo::rollmedian(x,k=((sf*10)+1),align="center",
-                                  fill=c(median(x[1:(sf*10)]),NA,median(x[(length(x)-(sf*10)):length(x)])))
+                                  fill=c(stats::median(x[1:(sf*10)]),NA,stats::median(x[(length(x)-(sf*10)):length(x)])))
           return(x)
         }
         eegdatabefore = eegdata
@@ -156,7 +156,7 @@ clean_emotiv = function(datadir,metadatafile,outputdir,sf,gyrothreshold,
         waveletdata$bands = bands
         wncount = 1
         for (j in 1:14) {
-          eegdata[,j+1] = eegdata[,j+1] - median(eegdata[,j+1])
+          eegdata[,j+1] = eegdata[,j+1] - stats::median(eegdata[,j+1])
           YLIM = range(c(eegdata[,j+1]),na.rm=TRUE)
           YLIM[1] = YLIM[1] - (abs(YLIM[1]) * 0.3)
           YLIM[2] = YLIM[2] + (abs(YLIM[2]) * 0.3)

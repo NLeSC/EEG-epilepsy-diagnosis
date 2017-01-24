@@ -1,4 +1,8 @@
 export(clean_emotiv, create_confmatrix)
 importFrom("stats", "aggregate", "fft", "is.ts", "predict", "quantile",
              "runif", "sd", "spectrum")
-importFrom("utils", "read.csv")
+importFrom("grDevices", "dev.off", "pdf")
+importFrom("graphics", "abline", "axis", "par", "plot", "plot.new",
+      "legend","lines")
+importFrom("stats", "C", "median", "quantile", "sd")
+importFrom("utils", "read.csv", "write.csv")

@@ -7,8 +7,8 @@ shareddrive = "/media/windows-share/EEG"
 funcfiles = list.files("emotivepilepsy/R",include.dirs=TRUE,full.names = TRUE)
 for (i in funcfiles) source(i)
 
-doclean = TRUE
-extractfeature = FALSE
+doclean = FALSE
+extractfeature = TRUE
 sf = 128 #sample frequency
 
 if (doclean == TRUE) {
@@ -45,7 +45,7 @@ if (doclean == TRUE) {
   print(paste0("succesful both: ",length(which(is.na(amountdata[,1]) == FALSE &
                                                  is.na(amountdata[,2]) == FALSE)) / nrow(amountdata)))
 }
-for (epochlength in c(10,4)) { # in seconds
+for (epochlength in c(4)) { # in seconds
   if (extractfeature == TRUE) {
     datadir = paste0(shareddrive,"/EEGs_Nigeria_cleaned")
     # featurenames and wavelet filter types to be extracted:

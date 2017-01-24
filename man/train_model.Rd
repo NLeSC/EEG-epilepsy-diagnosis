@@ -43,9 +43,8 @@ Loads EEG data and writes cleaned data to an output directory
   LABval=P$LABval;LABtest=P$LABtest;LABtrain=P$LABtrain;DATval=P$DATval;DATtest=P$DATtest;DATtrain=P$DATtrain
   modeldict = create_modeldict(DAT)
   mymodel = train_model(DATtrain,LABtrain,DATval,LABval,modeldict,classifier="rf")
-  }
+}
 }
 \author{
 Vincent T van Hees
 }
-
