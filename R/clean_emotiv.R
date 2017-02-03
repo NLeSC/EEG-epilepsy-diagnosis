@@ -215,7 +215,7 @@ clean_emotiv = function(datadir,metadatafile,outputdir,sf,gyrothreshold,
                   type="l",col="darkgrey",lwd=lwdX,cex=CX,cex.axis=CX,cex.lab=CX)
           }
           if (j == 1) { # add legend only in the first of the 14 plots
-            legend("topright",legend=c("raw EEG","corrected EEG","qc<3/gyro>30/compliance","artificats","wavelets"),
+            legend("topright",legend=c("raw EEG","corrected EEG","qc<3/gyro>30/compliance","artifacts","wavelets"),
                    col=c(CL[1],"black",CL[4],CL[6],"darkgrey"),
                    lwd=c(0.5,0.5,2,2,0.5),cex=0.5,ncol=3,lty=rep(1,5),bg="white",box.lwd=0.3)
           }
