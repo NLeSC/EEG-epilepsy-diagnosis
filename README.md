@@ -4,4 +4,6 @@
 # EEG-epilepsy-diagnosis
 
 
-Explorative R code to classify epilepsy from EEG signals. More documentation to follow.
+R code to train a classifier for 14 channels EEG data to distinguish individuals with Epilepsy from Controls.
+
+Please check folder 'demo' for how the code can be used. Documentation on all functions are in the functions folder
