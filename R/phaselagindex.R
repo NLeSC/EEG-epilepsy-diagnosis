@@ -62,29 +62,12 @@ phaselagindex = function(EEGdata,frequency=128) {
     d <- data.frame(densitypli = density, maxdegreepli = max.degree, 
                     maxstrengthpli = max.strength, mpli = m, diameterpli = diameter, leafnumberpli = leafnumber, maxbcpli = max.bc,
                     eccpli = ecc, radiuspli = radius, Thpli = Th, kappapli = kappa )    
-    # print(d)
-    # lll
-    # # properties for each node
-    # print(dim(plimatrix))
-    # out <- realproperties( plimatrix )
-    # rout <- randomproperties( plimatrix, nrandom = 10)
-    # kkk
-    # # summarized properties for entire network
-    # datareal = colMeans( out, na.rm = T )
-    # datarandom = rowMeans( sapply( rout, colMeans, na.rm = T ) )
-    # str <- datareal[[ 's' ]]
-    # lambda <- datareal[[ 'paths' ]] / datarandom[[ 'paths' ]]
-    # gamma <- datareal[[ 'clustering' ]] / datarandom[[ 'clustering' ]]
-    # d <- data.frame( subject, mod, density = density, strength = str, lambda = lambda, gamma = gamma, max.degree = max.degree, 
-    #                  max.strength = max.strength, m = m, diameter = diameter, leafnumber = leafnumber, max.bc = max.bc,
-    #                  ecc = ecc, radius = radius, Th = Th, kappa = kappa )
-    
     # final <- rbind( final, d )
     dlist <- as.list(d)
     output = append(output,dlist)
     invisible(output)
   } else {
-    print( paste( "*** PROBLEM with: ", infile, "!" ) )
+    print( paste( "*** PROBLEM with:  phaselagindex calculation" ) )
     invisible(output)
   }
   #==========================

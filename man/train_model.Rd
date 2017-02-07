@@ -2,7 +2,7 @@
 \alias{train_model}
 \title{Train binary classifier}
 \usage{
-train_model(DATtrain,LABtrain,DATval,LABval,modeldict,classifier="rf")
+train_model(DATtrain,LABtrain,DATval,LABval,featuredict,classifier="rf")
 }
 \arguments{
 \item{DATtrain}{Training feature values as produced by extract_features and split 
@@ -15,7 +15,7 @@ up by split_data}
 
 \item{LABval}{Validation labels as derived from split_data}
 
-\item{modeldict}{Dataframe with all overview of all available combinations of wavelet
+\item{featuredict}{Dataframe with all overview of all available combinations of wavelet
 types, wavelet levels, extracted signal features, and aggregation type.}
 
 \item{classifier}{type of classification model, defaul is "rf" for random forrest.
@@ -40,9 +40,10 @@ Loads EEG data and writes cleaned data to an output directory
   LAB = RDL$LAB
   P = split_data(LAB,DAT,logfile = logfile,proto_i=1,split=c(2,2),
                  uselog = FALSE,logdur=10)
-  LABval = P$LABval;LABtest=P$LABtest;LABtrain=P$LABtrain;DATval=P$DATval;DATtest=P$DATtest;DATtrain=P$DATtrain
-  modeldict = create_modeldict(DAT)
-  mymodel = train_model(DATtrain,LABtrain,DATval,LABval,modeldict,classifier="rf")
+  LABval = P$LABval;LABtest=P$LABtest;LABtrain=P$LABtrain
+  DATval=P$DATval;DATtest=P$DATtest;DATtrain=P$DATtrain
+  featuredict = create_featuredict(DAT)
+  mymodel = train_model(DATtrain,LABtrain,DATval,LABval,featuredict,classifier="rf")
 }
 }
 \author{

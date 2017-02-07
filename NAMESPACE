@@ -1,8 +1,9 @@
-export(clean_emotiv, create_confmatrix)
+export(clean_emotiv, create_confmatrix,train_model)
+import("igraph","Matrix")
 importFrom("stats", "aggregate", "fft", "is.ts", "predict", "quantile",
-             "runif", "sd", "spectrum")
+             "runif", "sd", "spectrum","na.omit")
 importFrom("grDevices", "dev.off", "pdf")
 importFrom("graphics", "abline", "axis", "par", "plot", "plot.new",
-      "legend","lines")
+      "legend","lines","text")
 importFrom("stats", "C", "median", "quantile", "sd")
 importFrom("utils", "read.csv", "write.csv")

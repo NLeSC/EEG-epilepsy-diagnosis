@@ -3,7 +3,7 @@ getmatrixfromfile <- function( file ) { # Get weighted sparse matrix.
 }	
 getmatrixfromfile2 <- function( file ) { # Get weighted sparse matrix.
   X <- as.matrix( read.csv( file, row.names = 1 ) )
-  X <- as.matrix( forceSymmetric( Matrix( X ) ) )
+  X <- as.matrix( Matrix::forceSymmetric( Matrix( X ) ) )
   diag( X ) <- 0
   X[ is.na( X ) ] <- 0
   return( X )
@@ -19,7 +19,7 @@ getdensity <- function( m ) { # Return matrix density.
   N <- ncol( m )
   denom <- ( N * ( N - 1 ) ) / 2	
   edges <- as.vector( m[ upper.tri( m ) ] )
-  total.edges <- length( na.omit( edges ) )
+  total.edges <- length( stats::na.omit( edges ) )
   density <- total.edges / denom
   return( round( density, 4 ) )
 }
@@ -48,7 +48,7 @@ clustering_onnela <- function( g ){
 strength <- function( g )  { # Return strength of weighted undirected graph.
   if( is.null( igraph::E( g )$weight ) ) 
     stop( "no weights in graph!" )
-  w <- apply( get.adjacency( g, attr = 'weight' ), 1, as.numeric ) # if edges are 'chars' 
+  w <- apply( igraph::get.adjacency( g, attr = 'weight' ), 1, as.numeric ) # if edges are 'chars' 
   strength <- rowSums( w, na.rm = TRUE )
   out <- cbind( strength = strength )
   rownames( out ) <- igraph::V( g )$name

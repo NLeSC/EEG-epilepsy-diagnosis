@@ -1,4 +1,4 @@
-train_model = function(DATtrain,LABtrain,DATval,LABval,modeldict,classifier="rf") { #,aggregateperid
+train_model = function(DATtrain,LABtrain,DATval,LABval,featuredict,classifier="rf") { #,aggregateperid
   #only look for best possible wavelet type, but used all features and aggregationtypes
   testpart = c("wavelet") #,"features","aggregationtype") #,"waveletlevel"
   performancemetric = "Accuracy" #"Spec" #Specificiaty to detect Control, equal sensitivity to detect epilepsy"
@@ -6,13 +6,13 @@ train_model = function(DATtrain,LABtrain,DATval,LABval,modeldict,classifier="rf"
     cnt = 1
     set.seed(300)
     if (testparti == "wavelet") {
-      allvalues = modeldict$wvtype #v2
+      allvalues = featuredict$wvtype #v2
     } else if (testparti == "features") {
-      allvalues = modeldict$feature #v3
+      allvalues = featuredict$feature #v3
     } else if (testparti == "waveletlevel") {
-      allvalues = modeldict$wvlevel #v5
+      allvalues = featuredict$wvlevel #v5
     } else if (testparti == "aggregationtype") {
-      allvalues = modeldict$aggtype #v6
+      allvalues = featuredict$aggtype #v6
     }
     valueseval = unique(allvalues)
     valuerawexist = which(valueseval == "raw")

@@ -1,4 +1,4 @@
-create_modeldict = function(DAT) {
+create_featuredict = function(DAT) {
   namesofplifeatures = c("meanpli","sdpli","ninetyppli","densitypli","maxdegreepli",
                     "maxstrengthpli","mpli","diameterpli","leafnumberpli","maxbcpli",
                          "eccpli","radiuspli","Thpli","kappapli")
@@ -51,9 +51,9 @@ create_modeldict = function(DAT) {
   #---------------------------
   DAT = DAT[,-which(names(DAT) =="id" | names(DAT) =="diagnosis" | names(DAT) =="protocol")] #,ncol(DAT)-1
   varnames = names(DAT)
-  modeldict = data.frame(wvtype = sapply(varnames,FUN = getwavelettype), #v2
+  featuredict = data.frame(wvtype = sapply(varnames,FUN = getwavelettype), #v2
                          feature = sapply(varnames,FUN = getfeaturetype), #v3
                          wvlevel = sapply(varnames,FUN = getwaveletlevel), #v5
                          aggtype = sapply(varnames,FUN = getaggtype),stringsAsFactors=FALSE) #v6
-  return(modeldict)
+  return(featuredict)
 }
