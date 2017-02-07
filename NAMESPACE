@@ -1,4 +1,4 @@
-export(clean_emotiv, create_confmatrix,create_featuredict,evaluatemodel,train_model)
+export(clean_emotiv, create_confmatrix,create_featuredict,evaluatemodel,train_model,extract_features)
 importFrom("stats", "aggregate", "fft", "is.ts", "predict", "quantile",
              "runif", "sd", "spectrum","na.omit","C","median")
 importFrom("grDevices", "dev.off", "pdf")
