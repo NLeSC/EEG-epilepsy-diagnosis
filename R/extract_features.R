@@ -13,11 +13,11 @@ extract_features = function(datadir,sf,n.levels,filtertypes,epochlength,fn){
       pracma.samen = pracma::sample_entropy(x)
     }
     domfreq = function(x) {
-      pp = spectrum(x,plot=FALSE)
+      pp = stats::spectrum(x,plot=FALSE)
       domfreq = pp$freq[which.max(pp$spec)]
     }
     maxpow = function(x) {
-      pp = spectrum(x,plot=FALSE)
+      pp = stats::spectrum(x,plot=FALSE)
       maxpow = max(pp$spec^2)
     }
     RMS = function(x) {

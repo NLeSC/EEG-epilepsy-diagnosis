@@ -3,7 +3,7 @@ getmatrixfromfile <- function( file ) { # Get weighted sparse matrix.
 }	
 getmatrixfromfile2 <- function( file ) { # Get weighted sparse matrix.
   X <- as.matrix( read.csv( file, row.names = 1 ) )
-  X <- as.matrix( Matrix::forceSymmetric( Matrix( X ) ) )
+  X <- as.matrix( Matrix::forceSymmetric( Matrix::Matrix( X ) ) )
   diag( X ) <- 0
   X[ is.na( X ) ] <- 0
   return( X )
@@ -161,9 +161,7 @@ randomproperties <- function( mat, nrandom = 10 ) {
   symmat = make.symmetric(mat)
   for( i in 1:nrandom ) {
     rsymmat = randomize(symmat)
-    kkk
     rg <- matrix2graph(rsymmat)
-    kkk
     rout[[ i ]] <- graphproperties( rg, mat )
   }
   return( rout )

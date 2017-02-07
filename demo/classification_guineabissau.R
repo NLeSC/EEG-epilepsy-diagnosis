@@ -7,10 +7,10 @@ shareddrive = "/media/windows-share/EEG"
 funcfiles = list.files("emotivepilepsy/R",include.dirs=TRUE,full.names = TRUE)
 for (i in funcfiles) source(i)
 
-trainbestmodel = FALSE
+trainbestmodel = TRUE
 for (epochlength in c(4)) { # in seconds
   for (aggregateperid in c(TRUE,FALSE)) { #FALSE
-    for (proto_i in  2:1) { #"open" =1 #closed= 2
+    for (proto_i in  2) { #"open" =1 #closed= 2
       evse = c()
       seeds2try = seq(100,1000,by=50)
       for (seed in seeds2try) { #try five seeds and select the median performing model in the test set for replication in other country
@@ -28,11 +28,11 @@ for (epochlength in c(4)) { # in seconds
         testforoverlap = length(unique(c(LABval$id,LABtrain$id,LABtest$id))) == length(c(unique(LABval$id),unique(LABtrain$id),unique(LABtest$id)))
         if (testforoverlap == FALSE) stop("Error: Matching id numbers between subsets")
         # generate dictionary of model characteristics
-        modeldict = create_modeldict(DAT)
+        featuredict = create_featuredict(DAT)
         #===============================================================
         # train models or loaded previously trained model
         if (trainbestmodel == TRUE) {
-          trainingresults = train_model(DATtrain,LABtrain,DATval,LABval,modeldict,classifier = "rf") #,aggregateperid=aggregateperid
+          trainingresults = train_model(DATtrain,LABtrain,DATval,LABval,featuredict,classifier = "rf") #,aggregateperid=aggregateperid
           best_model = trainingresults$best_model
           modelcomparison = trainingresults$result
           fes = c(trainingresults$fes,which(names(DATtest) %in% c("id","diagnosis","protocol") == TRUE))

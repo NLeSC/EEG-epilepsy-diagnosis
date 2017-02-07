@@ -7,12 +7,12 @@ shareddrive = "/media/windows-share/EEG"
 funcfiles = list.files("emotivepilepsy/R",include.dirs=TRUE,full.names = TRUE)
 for (i in funcfiles) source(i)
 
-doclean = TRUE
-extractfeature = FALSE
+doclean = FALSE
+extractfeature = TRUE
 sf = 128 #sample frequency
 
 if (doclean == TRUE) {
-  datadir =  paste0(shareddrive,"/EEGs_Nigeria") #"data/eeg"
+  datadir = paste0(shareddrive,"/EEGs_Nigeria") #"data/eeg"
   metadatafile = paste0(shareddrive,"/merged-meta-data_nigeria.csv")
   outputdir =  paste0(shareddrive,"/EEGs_Nigeria_cleaned")
   gyrothreshold = 30 #gyro unit deviations from the median that are not tolerated

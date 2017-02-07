@@ -19,7 +19,10 @@ Suggests:
     moments,
     seewave,
     signal,
-    pracma
+    pracma,
+    zoo,
+    Matrix,
+    igraph
 Depends:
     stats,
     utils,

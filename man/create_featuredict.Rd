@@ -2,7 +2,7 @@
 \alias{create_featuredict}
 \title{Creates a dictionary (dataframe) of all features in the data}
 \usage{
-create_featuredt(DAT)
+create_featuredict(DAT)
 }
 \arguments{
 \item{DAT}{Dataframe DAT produced by extract_features}
@@ -13,8 +13,6 @@ create_featuredt(DAT)
 }
 \description{
 Creates a dataframe of all features in the data with one characteristic per column
-}
-\examples{
 }
 \author{
 Vincent T van Hees
