@@ -218,7 +218,7 @@ clean_emotiv = function(datadir,metadatafile,outputdir,sf,gyrothreshold,
                    col=c(CL[1],"black",CL[4],CL[6],"darkgrey"),
                    lwd=c(0.5,0.5,2,2,0.5),cex=0.5,ncol=3,lty=rep(1,5),bg="white",box.lwd=0.3)
           }
-          text(x = 10,y = 5,labels = names(eegdata)[j+1],cex = 2)
+          graphics::text(x = 10,y = 5,labels = names(eegdata)[j+1],cex = 2)
           if (j == 14) dev.off() #| j ==7
         }
         #===================================
