@@ -20,7 +20,7 @@ types, wavelet levels, extracted signal features, and aggregation type.}
 
 \item{classifier}{type of classification model, defaul is "rf" for random forrest.
 Alternative value could be "lg" for logistic regression}
-
+}
 
 \value{
 \item{\code{result}}{classificiation performance in the validation set for each value
@@ -36,11 +36,11 @@ Loads EEG data and writes cleaned data to an output directory
   data(data.eeg)
   data(data.labels)
   RDL = reformat_DATLAB(data.eeg,data.labels,aggregateperid=TRUE)
-  DAT =RDL$DAT
+  DAT = RDL$DAT
   LAB = RDL$LAB
   P = split_data(LAB,DAT,logfile = logfile,proto_i=1,split=c(2,2),
                  uselog = FALSE,logdur=10)
-  LABval=P$LABval;LABtest=P$LABtest;LABtrain=P$LABtrain;DATval=P$DATval;DATtest=P$DATtest;DATtrain=P$DATtrain
+  LABval = P$LABval;LABtest=P$LABtest;LABtrain=P$LABtrain;DATval=P$DATval;DATtest=P$DATtest;DATtrain=P$DATtrain
   modeldict = create_modeldict(DAT)
   mymodel = train_model(DATtrain,LABtrain,DATval,LABval,modeldict,classifier="rf")
 }

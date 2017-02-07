@@ -13,7 +13,6 @@ clean_emotiv = function(datadir,metadatafile,outputdir,sf,gyrothreshold,
       return(as.numeric(unlist(strsplit(tmp,"-"))[2]))
     }
     idnames = sapply(files_short,getid)
-    
     fileinfo = data.frame(id=idnames,fnames_short=files_short,fnames_long=files,stringsAsFactors = FALSE)
     return(fileinfo)
   }
