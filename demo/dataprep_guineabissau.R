@@ -1,12 +1,7 @@
-rm(list=ls())
-graphics.off()
-setwd("/home/vincent/utrecht")
-funcfiles = list.files("EEG-epilepsy-diagnosis/R",include.dirs=TRUE,full.names = TRUE)
-for (i in funcfiles) source(i)
-
 #==============================================
 # Update the following lines:
 
+setwd("/home/vincent/utrecht")
 knownerrorfile = "/media/windows-share/EEG/guinneabissau_knownerrors.csv"
 metadatafile = "/media/windows-share/EEG/subject.id_with_meta-info__anonymized.csv"
 datadir = "/media/windows-share/EEG/EEGs_Guinea-Bissau__16-06-2016"
@@ -18,6 +13,9 @@ condition_start_closed = "closed-3min-then-open-2min" # the condition name for w
 protocolvariable = "Eyes.condition"
 protocoltimes = c(60,180,300) # in seconds
 #==============================================
+funcfiles = list.files("EEG-epilepsy-diagnosis/R",include.dirs=TRUE,full.names = TRUE) # this line only needed when developing
+for (i in funcfiles) source(i) # this line only needed when developing
+
 
 doclean = TRUE
 extractfeature =FALSE

@@ -1,12 +1,7 @@
-rm(list=ls())
-graphics.off()
-setwd("/home/vincent/utrecht")
-funcfiles = list.files("EEG-epilepsy-diagnosis/R",include.dirs=TRUE,full.names = TRUE)
-for (i in funcfiles) source(i)
-
 #==============================================
 # Update the following lines:
 
+setwd("/home/vincent/utrecht")
 knownerrorfile = "/media/windows-share/EEG/nigeria_knownerrors.csv"
 metadatafile = "/media/windows-share/EEG/merged-meta-data_nigeria.csv"
 datadir = "/media/windows-share/EEG/EEGs_Nigeria"
@@ -18,6 +13,8 @@ condition_start_closed = "closed"
 protocolvariable = "first_condition"
 protocoltimes = c(30,150,270) # in seconds
 #===============================================
+funcfiles = list.files("EEG-epilepsy-diagnosis/R",include.dirs=TRUE,full.names = TRUE) # this line only needed when developing
+for (i in funcfiles) source(i) # this line only needed when developing
 
 doclean = TRUE
 extractfeature = FALSE

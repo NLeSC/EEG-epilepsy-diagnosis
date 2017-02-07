@@ -1,20 +1,29 @@
-rm(list=ls())
-graphics.off()
-library(emotivepilepsy)
+#==============================================
+# Update the following lines:
 
 setwd("/home/vincent/utrecht")
-shareddrive = "/media/windows-share/EEG"
-funcfiles = list.files("EEG-epilepsy-diagnosis/R",include.dirs=TRUE,full.names = TRUE)
-for (i in funcfiles) source(i)
+outputdir = "/media/windows-share/EEG" # this is where folders will be created to store the output
+namecountry = "ni"
+namecountry2 = "gb" #the country for cross validation
+
+#==============================================
+funcfiles = list.files("EEG-epilepsy-diagnosis/R",include.dirs=TRUE,full.names = TRUE) # this line only needed when developing
+for (i in funcfiles) source(i) # this line only needed when developing
+
+outputdir_features = paste0(outputdir,"/EEGs_",namecountry,"_features") # directiory should have been generated in the pre-processing
+outputdir_bestmodels = paste0(outputdir,"/EEGs_",namecountry,"_bestmodels")
+if (!file.exists(outputdir_bestmodels)) dir.create(outputdir_bestmodels)
+outputdir_evaluation =  paste0(outputdir,"/EEGs_",namecountry,"_evaluation")
+if (!file.exists(outputdir_evaluation)) dir.create(outputdir_evaluation)
 
 trainbestmodel = TRUE
 for (epochlength in c(4)) { # in seconds
-  for (aggregateperid in c(FALSE)) { #,FALSE
-    for (proto_i in 2) { #"open" =1 #closed= 2
+  for (aggregateperid in c(TRUE,FALSE)) { #FALSE
+    for (proto_i in  2) { #"open" =1 #closed= 2
       evse = c()
-      seeds2try = seq(750,1000,by=50)
+      seeds2try = seq(100,1000,by=50)
       for (seed in seeds2try) { #try five seeds and select the median performing model in the test set for replication in other country
-        load(file=paste0(shareddrive,"/features_and_bestmodels/features/features_nigeria_",epochlength,".RData"))
+        load(file=paste0(outputdir_features,"/features_",namecountr,"_epoch",epochlength,".RData"))
         LAB$diagnosis = as.character(LAB$diagnosis)
         LAB$diagnosis[which(LAB$diagnosis == "control")] = "Control"
         LAB$diagnosis[which(LAB$diagnosis == "epilepsy")] = "Epilepsy"
@@ -40,48 +49,37 @@ for (epochlength in c(4)) { # in seconds
           best_model = trainingresults$best_model
           modelcomparison = trainingresults$result
           fes = c(trainingresults$fes,which(names(DATtest) %in% c("id","diagnosis","protocol") == TRUE))
-          country = "ni"
-          bestmodelfile = paste0(shareddrive,"/features_and_bestmodels/bestmodels/bestmodel_",proto_i,"_dur",
-                                 epochlength,"_country",country,"_perid",aggregateperid,"_seed",seed,".RData")
+          bestmodelfile = paste0(outputdir_bestmodels,"/bestmodel_",proto_i,"_dur",
+                                 epochlength,"_country",namecountry,"_perid",aggregateperid,"_seed",seed,".RData")
           winningmodel = trainingresults$winningmodel
           save(best_model,fes,winningmodel,file=bestmodelfile) # Save best model
           #===============================================================
           # evaluate model on test set
           test_factors = DATtest[,fes]
           evaluation = evaluatemodel(model=best_model,x=test_factors,labels=LABtest,proto_i=proto_i,aggregateperid=aggregateperid)
-          evaluation$country = "ni"
+          evaluation$country = namecountry
           evaluation$trainingcountry = country
           evaluation$seed = seed
           evaluation$winningmodel = winningmodel
           evse = rbind(evse,evaluation)
-        } else {
-          country = "gb" # load model from other country
+        } else { # Reload best model from the other country
           for (k in  1: length(seeds2try)) {
-            bestmodelfile = paste0(shareddrive,"/features_and_bestmodels/bestmodels/bestmodel_",proto_i,"_dur",
-                                   epochlength,"_country",country,"_perid",aggregateperid,"_seed",seeds2try[k],".RData")
+            bestmodelfile = paste0(outputdir_bestmodels,"/bestmodel_",proto_i,"_dur",
+                                   epochlength,"_country",namecountry2,"_perid",aggregateperid,"_seed",seeds2try[k],".RData")
             if (file.exists(bestmodelfile)) {
               load(bestmodelfile)
               #===============================================================
               # evaluate model on test set
               test_factors = DATtest[,fes]
               evaluation = evaluatemodel(model=best_model,x=test_factors,labels=LABtest,proto_i=proto_i,aggregateperid=aggregateperid)
-              evaluation$country = "ni"
-              evaluation$trainingcountry = country
+              evaluation$country = namecountry
+              evaluation$trainingcountry = namecountry2
               evaluation$seed = seed
               evaluation$winningmodel = winningmodel
               evse = rbind(evse,evaluation)
             }
           }
         }
-        #===============================================================
-        # evaluate model on test set
-        # test_factors = DATtest[,fes]
-        # evaluation = evaluatemodel(model=best_model,x=test_factors,labels=LABtest,proto_i=proto_i,aggregateperid=aggregateperid)
-        # evaluation$country = "ni"
-        # evaluation$trainingcountry = country
-        # evaluation$seed = seed
-        # evaluation$winningmodel = winningmodel
-        # evse = rbind(evse,evaluation)
       }
       #===============================================================
       # evaluate which seed resulted in median performance on test set and delete other models
@@ -91,8 +89,8 @@ for (epochlength in c(4)) { # in seconds
       evse = evse[with(evse,order(test.acc,test.kappa,test.auc,test.sens)),] #val.acc,val.kappa,val.auc,val.sens
       print(evse)
       # store seed evaluation
-      save(evse,file=paste0(shareddrive,"/features_and_bestmodels/evaluation/seedcomparison_",proto_i,"_dur",
-                            epochlength,"_country",country,"_perid",aggregateperid,"_evalcountry",evaluation$country,".RData"))
+      save(evse,file=paste0(outputdir_evaluation,"/seedcomparison_",proto_i,"_dur",
+                            epochlength,"_country",evaluation$trainingcountry,"_perid",aggregateperid,"_evalcountry",evaluation$country,".RData"))
     }
   }
 }
