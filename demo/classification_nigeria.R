@@ -4,15 +4,15 @@ library(emotivepilepsy)
 
 setwd("/home/vincent/utrecht")
 shareddrive = "/media/windows-share/EEG"
-funcfiles = list.files("emotivepilepsy/R",include.dirs=TRUE,full.names = TRUE)
+funcfiles = list.files("EEG-epilepsy-diagnosis/R",include.dirs=TRUE,full.names = TRUE)
 for (i in funcfiles) source(i)
 
 trainbestmodel = TRUE
 for (epochlength in c(4)) { # in seconds
-  for (aggregateperid in c(TRUE,FALSE)) { #,FALSE
-    for (proto_i in  2) { #"open" =1 #closed= 2
+  for (aggregateperid in c(FALSE)) { #,FALSE
+    for (proto_i in 2) { #"open" =1 #closed= 2
       evse = c()
-      seeds2try = seq(100,1000,by=50)
+      seeds2try = seq(750,1000,by=50)
       for (seed in seeds2try) { #try five seeds and select the median performing model in the test set for replication in other country
         load(file=paste0(shareddrive,"/features_and_bestmodels/features/features_nigeria_",epochlength,".RData"))
         LAB$diagnosis = as.character(LAB$diagnosis)

@@ -1,60 +1,55 @@
 rm(list=ls())
 graphics.off()
-library(wavelets)
-library(pracma)
 setwd("/home/vincent/utrecht")
-shareddrive = "/media/windows-share/EEG"
-funcfiles = list.files("emotivepilepsy/R",include.dirs=TRUE,full.names = TRUE)
+funcfiles = list.files("EEG-epilepsy-diagnosis/R",include.dirs=TRUE,full.names = TRUE)
 for (i in funcfiles) source(i)
 
-doclean = FALSE
-extractfeature = TRUE
-sf = 128 #sample frequency
+#==============================================
+# Update the following lines:
+
+knownerrorfile = "/media/windows-share/EEG/guinneabissau_knownerrors.csv"
+metadatafile = "/media/windows-share/EEG/subject.id_with_meta-info__anonymized.csv"
+datadir = "/media/windows-share/EEG/EEGs_Guinea-Bissau__16-06-2016"
+outputdir = "/media/windows-share/EEG" # this is where folders will be created to store the output
+namecountry = "gb"
+
+referencegroup = "Control" # if the group label is not this then the person has been diagnosied with Epilepsy
+condition_start_closed = "closed-3min-then-open-2min" # the condition name for which the person started with eyes closed condition
+protocolvariable = "Eyes.condition"
+protocoltimes = c(60,180,300) # in seconds
+#==============================================
+
+doclean = TRUE
+extractfeature =FALSE
+
+outputdir_clean = paste0(outputdir,"/EEGs_",namecountry,"_cleaned")
+if (!file.exists(outputdir_clean))  dir.create(outputdir_clean)
+outputdir_features = paste0(outputdir,"/EEGs_",namecountry,"_features")
+if (!file.exists(outputdir_features)) dir.create(outputdir_features)
+outputdir_logs = paste0(outputdir,"/EEGs_",namecountry,"_logs")
+if (!file.exists(outputdir_logs)) dir.create(outputdir_logs)
 
 if (doclean == TRUE) {
-  datadir =  paste0(shareddrive,"/EEGs_Guinea-Bissau__16-06-2016") #"data/eeg"
-  metadatafile = paste0(shareddrive,"/subject.id_with_meta-info__anonymized.csv")
-  outputdir = paste0(shareddrive,"/EEGs_Guinea-Bissau_cleaned")
-  gyrothreshold = 30 #gyro unit deviations from the median that are not tolerated
-  mindur = 4 # minimum duration in minutes
-  # define known errors based on Research Remarks (this is hardcoded, but could be extracted from a file in the future)
-  knownerrors = list(c(10,"4:30","5:00"), # => id, starttime, endtime of the problematic period
-                     c(13,"3:00","3:30"), # if there are more periods per id then use new entry
-                     c(20,"0:55","1:10"),
-                     c(22,"2:55","3:10"),
-                     c(29,"3:00","3:30"),
-                     c(40,"3:00","3:30"),
-                     c(44,"3:00","4:00"),
-                     c(58,"3:00","3:30"),
-                     c(61,"3:00","5:00"),
-                     c(67,"3:00","3:30"),
-                     c(84,"2:20","2:30"),
-                     c(92,"2:10","2:20"))
-  referencegroup = "Control"
-  condition_start_closed = "closed-3min-then-open-2min"
-  protocolvariable = "Eyes.condition"
-  protocoltimes = c(60,180,300) # in seconds
-  clean_stats = clean_emotiv(datadir,metadatafile,outputdir,sf,gyrothreshold,mindur,knownerrors,
+  knownerrors = read.csv(knownerrorfile)  
+  clean_stats = clean_emotiv(datadir,metadatafile,outputdir,knownerrors,
                              protocoltimes,referencegroup,condition_start_closed,protocolvariable)
   amountdata = clean_stats$amountdata
   correction_overview = clean_stats$correction_overview
   save(correction_overview,
-       file=paste0(shareddrive,"/features_and_bestmodels/correctionoverview_guineabisau.RData"))
+       file=paste0(outputdir_logs,"/correctionoverview_",nmaecountry,".RData"))
   print(paste0("successful open: ",length(which(is.na(amountdata[,1]) == FALSE)) / nrow(amountdata)))
   print(paste0("successful closed: ",length(which(is.na(amountdata[,2]) == FALSE)) / nrow(amountdata)))
   print(paste0("succesful both: ",length(which(is.na(amountdata[,1]) == FALSE &
                                                  is.na(amountdata[,2]) == FALSE)) / nrow(amountdata)))
 }
-for (epochlength in c(4)) { # in seconds
-  if (extractfeature == TRUE) {
-    datadir = paste0(shareddrive,"/EEGs_Guinea-Bissau_cleaned")
+if (extractfeature == TRUE) {
+  for (epochlength in c(4)) { # in seconds
     # featurenames and wavelet filter types to be extracted:
     fn = c("sd") #,"entropy","min","max") #
     filtertypes =  paste0("d",seq(2,10,by=4)) # Daubechies
-    n.levels = 7
-    ef = extract_features(datadir,sf,n.levels,filtertypes,epochlength,fn)
+    ef = extract_features(cleandatadir=outputdir_clean,filtertypes,epochlength,fn)
     DAT = ef$DAT
     LAB = ef$LAB
-    save(DAT,LAB,labels,file=paste0(shareddrive,"/features_and_bestmodels/features_ginneabissau_",epochlength,".RData"))
+    save(DAT,LAB,labels,file=paste0(outputdir_features,"/features_",namecountr,"_epoch",epochlength,".RData"))
   }
 }

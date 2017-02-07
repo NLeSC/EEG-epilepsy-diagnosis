@@ -22,7 +22,9 @@ Suggests:
     pracma,
     zoo,
     Matrix,
-    igraph
+    igraph,
+    randomForest,
+    e1071
 Depends:
     stats,
     utils,

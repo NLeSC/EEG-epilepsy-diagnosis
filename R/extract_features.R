@@ -1,4 +1,4 @@
-extract_features = function(datadir,sf,n.levels,filtertypes,epochlength,fn){
+extract_features = function(cleandatadir,sf=128,n.levels=7,filtertypes,epochlength,fn){
   print("extract features")
   getfeatures = function(x,fns) {
     #--------------------------------------------------------
@@ -87,8 +87,8 @@ extract_features = function(datadir,sf,n.levels,filtertypes,epochlength,fn){
   #-------------------------------------------
   siglen = epochlength*sf
   # filenames
-  files = list.files(datadir,include.dirs=TRUE,full.names = TRUE)
-  files_short = list.files(datadir,include.dirs=FALSE,full.names = FALSE)
+  files = list.files(cleandatadir,include.dirs=TRUE,full.names = TRUE)
+  files_short = list.files(cleandatadir,include.dirs=FALSE,full.names = FALSE)
   # extract metadata from filenames
   metadata = data.frame(id = as.numeric(sapply(files_short,getid)),
                         protocol = as.character(sapply(files_short,getprotocol)),

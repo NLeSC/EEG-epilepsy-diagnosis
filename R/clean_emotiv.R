@@ -1,5 +1,5 @@
-clean_emotiv = function(datadir,metadatafile,outputdir,sf,gyrothreshold,
-                        mindur,knownerrors,protocoltimes,referencegroup,condition_start_closed,
+clean_emotiv = function(datadir,metadatafile,outputdir,sf=128,gyrothreshold=30,
+                        mindur=4,knownerrors,protocoltimes,referencegroup,condition_start_closed,
                         protocolvariable) {
   print("load and clean data")
   print(sf)
@@ -25,7 +25,7 @@ clean_emotiv = function(datadir,metadatafile,outputdir,sf,gyrothreshold,
     poordataindices = c(startend[1],poordataindices,startend[2]) #add first and last sample
     return(poordataindices)
   }
-  addqualityindicator= function(eegdata,knownerrors.df,gyrothreshold,id) {
+  addqualityindicator= function(eegdata,knownerrors.df,gyrothreshold=gyrothreshold,id) {
     # add labels to unfit parts of the data based on qc scores and gyro:
     eegdata$quality = 1 # default is quality 1, which is good
     minqc = do.call(pmin,as.data.frame(eegdata[,22:36])) #minimum qc value per timestep across channels
@@ -102,7 +102,9 @@ clean_emotiv = function(datadir,metadatafile,outputdir,sf,gyrothreshold,
   fileinfo = getfileinfo(datadir) # extract id numbers from EEG filenames
   uid = sort(unique(fileinfo$id))
   metadata = merge(metadata,fileinfo,by.y="id",by.x="subject.id") # merge EEG fileinfo with metadata
-  knownerrors.df = data.frame(matrix(unlist(knownerrors),ncol=3,byrow=T),stringsAsFactors = FALSE)
+  # knownerrors.df = data.frame(matrix(unlist(knownerrors),ncol=3,byrow=T),stringsAsFactors = FALSE)
+  knownerrors.df = knownerrors
+  
   amountdata = matrix(NA,length(uid),4) # initialize matrix to keep record of amount of data
   if (length(which(names(metadata) == "subject.id" | names(metadata) == "Group")) < 2) {
     warning('metadata needs to have subject.id and Group in variable names')

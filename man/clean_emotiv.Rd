@@ -2,7 +2,7 @@
 \alias{clean_emotiv}
 \title{Clean emotive EEG data}
 \usage{
-clean_emotiv(datadir, metadatafile, outputdir, sf, gyrothreshold, mindur,
+clean_emotiv(datadir, metadatafile, outputdir, sf=128, gyrothreshold=30, mindur=4,
   knownerrors, protocoltimes, referencegroup, condition_start_closed, protocolvariable)
 }
 \arguments{
@@ -18,8 +18,9 @@ clean_emotiv(datadir, metadatafile, outputdir, sf, gyrothreshold, mindur,
 
 \item{mindur}{required minimum duration (minutes) of the EEG time series}
 
-\item{knownerrors}{list of known errors in the data, structured as 
-  list(c(id,"4:30","5:00"), with id being the patient identifier}
+\item{knownerrors}{data frame with 3 columns for the person identifier,
+start time and end time corresponding to the data that needs to be ignored
+Time format is minute:seconds}
 
 \item{protocoltimes}{vector of length 3 with start times of first and 
   second experiment and end time of last experiment}
