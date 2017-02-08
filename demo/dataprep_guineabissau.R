@@ -22,10 +22,12 @@ extractfeature =FALSE
 
 outputdir_clean = paste0(outputdir,"/EEGs_",namecountry,"_cleaned")
 if (!file.exists(outputdir_clean))  dir.create(outputdir_clean)
-outputdir_features = paste0(outputdir,"/EEGs_",namecountry,"_features")
+outputdir_features = paste0(outputdir,"/EEGs_features")
 if (!file.exists(outputdir_features)) dir.create(outputdir_features)
-outputdir_logs = paste0(outputdir,"/EEGs_",namecountry,"_logs")
+outputdir_logs = paste0(outputdir,"/EEGs_logs")
 if (!file.exists(outputdir_logs)) dir.create(outputdir_logs)
+outputdir_images = paste0(outputdir,"/images")
+if (!file.exists(outputdir_images)) dir.create(outputdir_images)
 
 if (doclean == TRUE) {
   knownerrors = read.csv(knownerrorfile)  

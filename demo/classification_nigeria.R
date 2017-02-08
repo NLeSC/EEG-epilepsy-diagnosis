@@ -10,20 +10,20 @@ namecountry2 = "gb" #the country for cross validation
 funcfiles = list.files("EEG-epilepsy-diagnosis/R",include.dirs=TRUE,full.names = TRUE) # this line only needed when developing
 for (i in funcfiles) source(i) # this line only needed when developing
 
-outputdir_features = paste0(outputdir,"/EEGs_",namecountry,"_features") # directiory should have been generated in the pre-processing
-outputdir_bestmodels = paste0(outputdir,"/EEGs_",namecountry,"_bestmodels")
+outputdir_features = paste0(outputdir,"/EEGs_features") # directiory should have been generated in the pre-processing
+outputdir_bestmodels = paste0(outputdir,"/EEGs_bestmodels")
 if (!file.exists(outputdir_bestmodels)) dir.create(outputdir_bestmodels)
-outputdir_evaluation =  paste0(outputdir,"/EEGs_",namecountry,"_evaluation")
+outputdir_evaluation =  paste0(outputdir,"/EEGs_evaluation")
 if (!file.exists(outputdir_evaluation)) dir.create(outputdir_evaluation)
 
-trainbestmodel = TRUE
+trainbestmodel = FALSE
 for (epochlength in c(4)) { # in seconds
-  for (aggregateperid in c(TRUE,FALSE)) { #FALSE
+  for (aggregateperid in c(FALSE)) { #FALSE
     for (proto_i in  2) { #"open" =1 #closed= 2
       evse = c()
       seeds2try = seq(100,1000,by=50)
       for (seed in seeds2try) { #try five seeds and select the median performing model in the test set for replication in other country
-        load(file=paste0(outputdir_features,"/features_",namecountr,"_epoch",epochlength,".RData"))
+        load(file=paste0(outputdir_features,"/features_",namecountry,"_epoch",epochlength,".RData"))
         LAB$diagnosis = as.character(LAB$diagnosis)
         LAB$diagnosis[which(LAB$diagnosis == "control")] = "Control"
         LAB$diagnosis[which(LAB$diagnosis == "epilepsy")] = "Epilepsy"
@@ -58,26 +58,29 @@ for (epochlength in c(4)) { # in seconds
           test_factors = DATtest[,fes]
           evaluation = evaluatemodel(model=best_model,x=test_factors,labels=LABtest,proto_i=proto_i,aggregateperid=aggregateperid)
           evaluation$country = namecountry
-          evaluation$trainingcountry = country
+          evaluation$trainingcountry = namecountry
           evaluation$seed = seed
           evaluation$winningmodel = winningmodel
           evse = rbind(evse,evaluation)
         } else { # Reload best model from the other country
           for (k in  1: length(seeds2try)) {
-            bestmodelfile = paste0(outputdir_bestmodels,"/bestmodel_",proto_i,"_dur",
-                                   epochlength,"_country",namecountry2,"_perid",aggregateperid,"_seed",seeds2try[k],".RData")
-            if (file.exists(bestmodelfile)) {
-              load(bestmodelfile)
-              #===============================================================
-              # evaluate model on test set
-              test_factors = DATtest[,fes]
-              evaluation = evaluatemodel(model=best_model,x=test_factors,labels=LABtest,proto_i=proto_i,aggregateperid=aggregateperid)
-              evaluation$country = namecountry
-              evaluation$trainingcountry = namecountry2
-              evaluation$seed = seed
-              evaluation$winningmodel = winningmodel
-              evse = rbind(evse,evaluation)
-            }
+          bestmodelfile = paste0(outputdir_bestmodels,"/bestmodel_",proto_i,"_dur",
+                                 epochlength,"_country",namecountry2,"_perid",aggregateperid,"_seed",seeds2try[k],".RData")
+          # bestmodelfile = paste0(outputdir_bestmodels,"/bestmodel_",proto_i,"_dur",
+          #                        epochlength,"_country",namecountry,"_perid",aggregateperid,"_seed",seed,".RData")
+          if (file.exists(bestmodelfile)) {
+            load(bestmodelfile)
+            #===============================================================
+            # evaluate model on test set
+            test_factors = DATtest[,fes]
+            evaluation = evaluatemodel(model=best_model,x=test_factors,labels=LABtest,proto_i=proto_i,aggregateperid=aggregateperid)
+            evaluation$country = namecountry
+            evaluation$trainingcountry = namecountry2
+            # evaluation$trainingcountry = namecountry
+            evaluation$seed = seed
+            evaluation$winningmodel = winningmodel
+            evse = rbind(evse,evaluation)
+          }
           }
         }
       }
