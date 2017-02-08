@@ -18,7 +18,7 @@ if (!file.exists(outputdir_evaluation)) dir.create(outputdir_evaluation)
 
 trainbestmodel = FALSE
 for (epochlength in c(4)) { # in seconds
-  for (aggregateperid in c(FALSE)) { #FALSE
+  for (aggregateperid in c(TRUE)) { #FALSE
     for (proto_i in  2) { #"open" =1 #closed= 2
       evse = c()
       seeds2try = seq(100,1000,by=50)
