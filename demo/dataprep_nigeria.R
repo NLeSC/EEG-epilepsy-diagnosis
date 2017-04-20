@@ -2,8 +2,8 @@
 # Update the following lines:
 
 setwd("/home/vincent/utrecht")
-knownerrorfile = "/media/windows-share/EEG/nigeria_knownerrors.csv"
-metadatafile = "/media/windows-share/EEG/merged-meta-data_nigeria.csv"
+knownerrorfile = "/media/windows-share/EEG/input/nigeria_knownerrors.csv"
+metadatafile = "/media/windows-share/EEG/input/merged-meta-data_nigeria.csv"
 datadir = "/media/windows-share/EEG/EEGs_Nigeria"
 outputdir = "/media/windows-share/EEG" # this is where folders will be created to store the output
 namecountry = "ni"
@@ -16,8 +16,8 @@ protocoltimes = c(30,150,270) # in seconds
 funcfiles = list.files("EEG-epilepsy-diagnosis/R",include.dirs=TRUE,full.names = TRUE) # this line only needed when developing
 for (i in funcfiles) source(i) # this line only needed when developing
 
-doclean = TRUE
-extractfeature = FALSE
+doclean = FALSE
+extractfeature = TRUE
 
 outputdir_clean = paste0(outputdir,"/EEGs_",namecountry,"_cleaned")
 if (!file.exists(outputdir_clean))  dir.create(outputdir_clean)
@@ -31,11 +31,11 @@ if (!file.exists(outputdir_images)) dir.create(outputdir_images)
 if (doclean == TRUE) {
   knownerrors = read.csv(knownerrorfile)  
   clean_stats = clean_emotiv(datadir,metadatafile,outputdir,knownerrors,
-                             protocoltimes,referencegroup,condition_start_closed,protocolvariable)
+                             protocoltimes,referencegroup,condition_start_closed,protocolvariable,outputdir_clean)
   amountdata = clean_stats$amountdata
   correction_overview = clean_stats$correction_overview
   save(correction_overview,
-       file=paste0(outputdir_logs,"/correctionoverview_",nmaecountry,".RData"))
+       file=paste0(outputdir_logs,"/correctionoverview_",namecountry,".RData"))
   print(paste0("successful open: ",length(which(is.na(amountdata[,1]) == FALSE)) / nrow(amountdata)))
   print(paste0("successful closed: ",length(which(is.na(amountdata[,2]) == FALSE)) / nrow(amountdata)))
   print(paste0("succesful both: ",length(which(is.na(amountdata[,1]) == FALSE &
@@ -49,6 +49,6 @@ if (extractfeature == TRUE) {
     ef = extract_features(cleandatadir=outputdir_clean,filtertypes,epochlength,fn)
     DAT = ef$DAT
     LAB = ef$LAB
-    save(DAT,LAB,labels,file=paste0(outputdir_features,"/features_",namecountr,"_epoch",epochlength,".RData"))
+    save(DAT,LAB,labels,file=paste0(outputdir_features,"/features_",namecountry,"_epoch",epochlength,".RData"))
   }
 }

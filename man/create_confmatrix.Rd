@@ -19,12 +19,11 @@ Creates an NxN confusion matrix for a binary classification and its reference va
 }
 \examples{
 set.seed(21)
-reference = make.names(round(runif(n=10,min=0,max=0.8),digits=0))
+reference <- make.names(round(runif(n=10,min=0,max=0.8),digits=0))
 set.seed(23)
-predicted = make.names(round(runif(n=10,min=0,max=0.8),digits=0))
+predicted <- make.names(round(runif(n=10,min=0,max=0.8),digits=0))
 confusionmatrix <- create_confmatrix(reference, predicted)
 }
 \author{
 Vincent T van Hees
 }
-

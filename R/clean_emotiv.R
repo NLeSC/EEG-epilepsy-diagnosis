@@ -1,6 +1,5 @@
-clean_emotiv = function(datadir,metadatafile,outputdir,sf=128,gyrothreshold=30,
-                        mindur=4,knownerrors,protocoltimes,referencegroup,condition_start_closed,
-                        protocolvariable) {
+clean_emotiv = function(datadir,metadatafile,outputdir,knownerrors,protocoltimes,referencegroup,condition_start_closed,
+                        protocolvariable, outputdir_clean, sf=128,gyrothreshold=30, mindur=4) {
   print("load and clean data")
   print(sf)
   #--------------------------------------------------------
@@ -28,7 +27,7 @@ clean_emotiv = function(datadir,metadatafile,outputdir,sf=128,gyrothreshold=30,
   addqualityindicator= function(eegdata,knownerrors.df,gyrothreshold=gyrothreshold,id) {
     # add labels to unfit parts of the data based on qc scores and gyro:
     eegdata$quality = 1 # default is quality 1, which is good
-    minqc = do.call(pmin,as.data.frame(eegdata[,22:36])) #minimum qc value per timestep across channels
+    minqc = do.call(pmin,as.data.frame(eegdata[,21:36])) #minimum qc value per timestep across channels
     gyrox = abs(eegdata$GYROX-stats::median(eegdata$GYROX)) # absolute deviation from the median
     gyroy = abs(eegdata$GYROY-stats::median(eegdata$GYROY)) # absolute deviation from the median
     # Check for head movement: The unit of gyro is difficult to interpret
@@ -37,7 +36,7 @@ clean_emotiv = function(datadir,metadatafile,outputdir,sf=128,gyrothreshold=30,
     # so 30 units on a scale of >1000 would seem to at least ommit the extreme movement
     eegdata$quality[which(gyrox > gyrothreshold | gyroy > gyrothreshold | minqc < 3)] = 0 # data quality 0 is defined as poor
     #======================================================================
-    ikne = which(knownerrors.df[,1] == id) # ikne = Id for the KNown Errors
+    ikne = which(as.character(knownerrors.df[,1]) == as.character(id)) # ikne = Id for the KNown Errors
     if (length(ikne) > 0) {
       for (j in 1:length(ikne)) { # loop over patient ids with known errors
         tmp1 = as.numeric(unlist(strsplit(knownerrors.df[ikne[j],2],":")))
@@ -96,14 +95,17 @@ clean_emotiv = function(datadir,metadatafile,outputdir,sf=128,gyrothreshold=30,
   }
   #--------------------------------------------------------
   # Start script
-  extract_country = as.character(unlist(strsplit(outputdir,"/"))) # extract country from file directory specified by outputdir
+  extract_country = as.character(unlist(strsplit(outputdir_clean,"/"))) # extract country from file directory specified by outputdir
   extract_country = extract_country[length(extract_country)]
   metadata = utils::read.csv(metadatafile) # get metadata
   fileinfo = getfileinfo(datadir) # extract id numbers from EEG filenames
   uid = sort(unique(fileinfo$id))
   metadata = merge(metadata,fileinfo,by.y="id",by.x="subject.id") # merge EEG fileinfo with metadata
   # knownerrors.df = data.frame(matrix(unlist(knownerrors),ncol=3,byrow=T),stringsAsFactors = FALSE)
-  knownerrors.df = knownerrors
+  knownerrors.df = data.frame(knownerrors,stringsAsFactors = FALSE)
+  knownerrors.df$start = as.character(knownerrors.df$start)
+  knownerrors.df$end = as.character(knownerrors.df$end)
+  
   
   amountdata = matrix(NA,length(uid),4) # initialize matrix to keep record of amount of data
   if (length(which(names(metadata) == "subject.id" | names(metadata) == "Group")) < 2) {
@@ -114,7 +116,10 @@ clean_emotiv = function(datadir,metadatafile,outputdir,sf=128,gyrothreshold=30,
   count_healthy = 0
   cnt = 0 #counter for showing analysis process in console
   correction_overview = matrix(NA,length(uid),14)
+  quality_overview = matrix(NA,length(uid),17)
+  icount = 0
   for (i in uid) { # loop over unique id numbers derived from eeg files
+    icount = icount + 1
     cat(paste0(i," "))
     ind2 = which(uid == i)  #index in the unique eegdata ids
     if (cnt == 10) {   # print progress after every 5 files
@@ -148,10 +153,11 @@ clean_emotiv = function(datadir,metadatafile,outputdir,sf=128,gyrothreshold=30,
         }
         eegdata_raw = eegdata[,2:15]
         eegdata[,2:15] = eegdata_corrected #replace eeg data by corrected data
-        # Now normalize the corrected eeg data
-        eegdata[,2:15] = apply(eegdata[,2:15],2,FUN=function(x) x/sd(x))
-        # also normalize the raw data
-        eegdata_raw = apply(eegdata_raw,2,FUN=function(x) (x-median(x))/sd(x))
+        # Turned off on 14/4/2017 by VvH
+        # # Now normalize the corrected eeg data
+        # eegdata[,2:15] = apply(eegdata[,2:15],2,FUN=function(x) x/sd(x))
+        # # also normalize the raw data
+        # eegdata_raw = apply(eegdata_raw,2,FUN=function(x) (x-median(x))/sd(x))
         # Wavelet extraction for the purpose of plotting, we do not use it here for feature extraction
         wtdata = t(apply(eegdata[,2:15],2,mymra)) # apply multi-resolution analyses
         waveletdata = as.data.frame(t(wtdata))
@@ -171,7 +177,7 @@ clean_emotiv = function(datadir,metadatafile,outputdir,sf=128,gyrothreshold=30,
         for (j in 1:14) {
           if (createnewplot == TRUE) {
             pngfile= as.character(unlist(strsplit(outputdir,"/")))
-            pngfile = paste0(pngfile[1:length(pngfile)-1],collapse="/")
+            pngfile = paste0(pngfile[1:length(pngfile)],collapse="/")
             pngfile = paste0(pngfile,"/images/",extract_country,"_rawdata_inspection_id",i,
                              "_file",ceiling(j/7),".pdf")
             pdf(file=pngfile,width = 7,height = 9)
@@ -223,6 +229,26 @@ clean_emotiv = function(datadir,metadatafile,outputdir,sf=128,gyrothreshold=30,
           graphics::text(x = 10,y = 5,labels = names(eegdata)[j+1],cex = 2)
           if (j == 14) dev.off() #| j ==7
         }
+        quality_overview[icount,1] = i
+        quality_overview[icount,2] = mean(eegdata[which(eegdata$protocol == "open"),]$RAW_CQ)
+        quality_overview[icount,3] = mean(eegdata[which(eegdata$protocol == "closed"),]$RAW_CQ)
+        quality_overview[icount,4] = length(which(eegdata[which(eegdata$protocol == "open"),]$quality == 0))
+        quality_overview[icount,5] = length(which(eegdata[which(eegdata$protocol == "open"),]$quality == 1))
+        quality_overview[icount,6] = length(which(eegdata[which(eegdata$protocol == "open"),]$quality == 2))
+        quality_overview[icount,7] = length(which(eegdata[which(eegdata$protocol == "closed"),]$quality == 0))
+        quality_overview[icount,8] = length(which(eegdata[which(eegdata$protocol == "closed"),]$quality == 1))
+        quality_overview[icount,9] = length(which(eegdata[which(eegdata$protocol == "closed"),]$quality == 2))
+        minimumqcscore = do.call(pmin,as.data.frame(eegdata[which(eegdata$protocol == "open"),21:36]))
+        quality_overview[icount,10] = length(which(minimumqcscore == 1))
+        quality_overview[icount,11] = length(which(minimumqcscore == 2))
+        quality_overview[icount,12] = length(which(minimumqcscore == 3))
+        quality_overview[icount,13] = length(which(minimumqcscore == 4))
+        minimumqcscore = do.call(pmin,as.data.frame(eegdata[which(eegdata$protocol == "closed"),21:36]))
+        quality_overview[icount,14] = length(which(minimumqcscore == 1))
+        quality_overview[icount,15] = length(which(minimumqcscore == 2))
+        quality_overview[icount,16] = length(which(minimumqcscore == 3))
+        quality_overview[icount,17] = length(which(minimumqcscore == 4))
+        
         #===================================
         # export longest continuous healthy protocol part to a csv
         for (protocol in c("open","closed")) {
@@ -242,11 +268,11 @@ clean_emotiv = function(datadir,metadatafile,outputdir,sf=128,gyrothreshold=30,
                 if (protocol == "open") {
                   amountdata[ind2,1] = epoch
                   dataopen = eegdata[select,]
-                  write2file(x=dataopen,outputdir,meta=metadata[ind,],dur = floor(boutdur_long[ii]/sf),epoch,protocol) 
+                  write2file(x=dataopen,outputdir_clean,meta=metadata[ind,],dur = floor(boutdur_long[ii]/sf),epoch,protocol) 
                 } else if (protocol == "closed") {
                   amountdata[ind2,2] = epoch
                   dataclosed = eegdata[select,]
-                  write2file(x=dataclosed,outputdir,meta=metadata[ind,],dur = floor(boutdur_long[ii]/sf),epoch,protocol) 
+                  write2file(x=dataclosed,outputdir_clean,meta=metadata[ind,],dur = floor(boutdur_long[ii]/sf),epoch,protocol) 
                 }
                 epoch = epoch + 1
               }
@@ -255,9 +281,15 @@ clean_emotiv = function(datadir,metadatafile,outputdir,sf=128,gyrothreshold=30,
             print("not sufficient data") #no data is saved
           }
         }
+        
         rm(eegdata)
       }
     }
   }
+  colnames(quality_overview) = c("id","open_mean_RAWCQ","closed_mean_RAWCQ","open_quality0","open_quality1","open_quality2",
+                                 "closed_quality0","closed_quality1","closed_quality2",
+                                 "open_qc1","open_qc2","open_qc3","open_qc4",
+                                 "closed_qc1","closed_qc2","closed_qc3","closed_qc4")
+  write.csv(quality_overview,file=paste0(outputdir,"/quality_overview_",extract_country,".csv"))
   invisible(list(amountdata=amountdata,correction_overview=correction_overview))
 }

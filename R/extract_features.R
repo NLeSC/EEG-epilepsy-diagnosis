@@ -1,4 +1,4 @@
-extract_features = function(cleandatadir,sf=128,n.levels=7,filtertypes,epochlength,fn){
+extract_features = function(cleandatadir,filtertypes,epochlength,fn,sf=128,n.levels=7){
   print("extract features")
   getfeatures = function(x,fns) {
     #--------------------------------------------------------
