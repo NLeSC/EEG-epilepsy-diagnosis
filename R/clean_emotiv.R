@@ -168,7 +168,7 @@ clean_emotiv = function(datadir,metadatafile,outputdir,knownerrors,protocoltimes
         #=================================
         # Plotting
         createnewplot = TRUE # indicator of whether a new plot needs to be created
-        YLIM = c(-6,16) # range for plot y-axis
+        YLIM = c(-6000,6000) # range for plot y-axis
         CX = 0.8
         lwdX = 0.3
         CL = c("red","#15353b","#005866","#46919d", "#ffda83","#ffb300")

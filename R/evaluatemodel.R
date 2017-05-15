@@ -10,7 +10,6 @@ evaluatemodel = function(model,x,labels,proto_i,aggregateperid) {
     x_agg = aggregate(. ~ id,data=x,mean) #new
     labels_agg = stats::aggregate(. ~ id,data=labels,function(x){x[1]})
   }
-  # result.roc <- pROC::roc(labels_agg$diagnosis, pred_test$X1)
   result.roc <- pROC::roc(x_agg$diagnosis, pred_test$X1)
   auctest = result.roc$auc
   result.coords <- pROC::coords(result.roc, "best", best.method="closest.topleft", ret=c("threshold", "accuracy"))
@@ -18,14 +17,13 @@ evaluatemodel = function(model,x,labels,proto_i,aggregateperid) {
   pred_test_cat[pred_test$X2 > 0.500] = "X2"
   refe = make.names(labels_agg$diagnosis)
   predi = pred_test_cat
-  # print(predi)
-  # print(refe)
   confmat = create_confmatrix(predi,refe) 
   
   test.confmatrix = paste0(confmat[1,1],"_",confmat[1,2],"_",confmat[2,1],"_",confmat[2,2])
   test.auc = round(auctest,digits=3)
   test.kappa = round(psych::cohen.kappa(x=confmat)$kappa,digits=3)
   test.acc = round(sum(diag(confmat)) / sum(confmat),digits=3)
+  print(dimnames(confmat))
   predij = which(names(dimnames(confmat))=="predicted")
   if (length(predij) == 0) predij = 1
   if (predij == 1) {  # sensitivty to detect Epilepsy

@@ -50,7 +50,7 @@ for (epochlength in c(4)) { # in seconds
           DATtest = DATtest[,col2keep]
           featuredict = featuredict[which(featuredict$feature == "sd"),]
         }
-        kkk
+
         #===============================================================
         # train models or loaded previously trained model
         if (trainbestmodel == TRUE) {
