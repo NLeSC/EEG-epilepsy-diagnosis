@@ -4,7 +4,6 @@ graphics.off()
 path = "/media/windows-share/EEG/"
 
 
-
 # Figure 1:
 correctartifact = function(x) {
   sf = 128
@@ -45,62 +44,6 @@ dev.off()
 #======================================
 # count how much data is available
 winsize = 4
-# for (country in 1:2) {
-#   if (country == 1) {
-#     cat("Nigeria:\n")
-#     path_cleaned = "/media/windows-share/EEG/EEGs_ni_cleaned"
-#     contr = "control"; epi = "epilepsy"
-#     
-#   } else {
-#     cat("Guinea-Bissau:\n")
-#     path_cleaned = "/media/windows-share/EEG/EEGs_gb_cleaned"
-#     contr = "Control"; epi = "Epilepsy"
-#   }
-#   fnames = dir(path_cleaned)
-#   getinfo = function(x) {
-#     tmp = as.character(unlist(strsplit(x,"_")))
-#     protocol = tmp[1]
-#     id = unlist(strsplit(tmp[2],"d"))[2]
-#     dur= as.numeric(unlist(strsplit(tmp[3],"r"))[2])
-#     epoch= as.numeric(unlist(strsplit(tmp[4],"h"))[2])
-#     tmp2 = unlist(strsplit(tmp[5],"gro"))[2]
-#     diagnosis= as.character(unlist(strsplit(tmp2,"[.]"))[1])
-#     return(list(protocol=protocol,id=id,dur=dur,epoch=epoch,diagnosis=diagnosis))
-#   }
-#   ad = as.data.frame(t(sapply(fnames,getinfo)))
-#   ad$protocol = as.factor(as.character(ad$protocol))
-#   ad$diagnosis = as.factor(as.character(ad$diagnosis))
-#   ad$id = as.numeric(ad$id)
-#   ad$dur = as.numeric(ad$dur)
-#   ad$epoch = as.numeric(ad$epoch)
-#   ad$dur2 = floor(as.numeric(ad$dur) / winsize)
-#   ad = aggregate(. ~ protocol + id + diagnosis,data=ad,FUN=sum)
-#   for (prt in c("eyesclosed","eyesopen")) {
-#     for (diag in c(contr,epi)) {
-#       select = which(ad$protocol == prt & ad$diagnosis == diag & ad$dur2 >= 1)
-#       if (length(select) > 0) {
-#         cat(paste0(prt," ",diag," ",length(unique(ad[select,]$id))," with on averageld ",
-#                    round(mean(ad[select,]$dur2),digits=1)," windows per persoon\n"))
-#         
-#       } else {
-#         print(paste0(prt," ",diag," ",0))
-#       }
-#     }
-#   }
-# }
-# 
-# # Count how often correction has been applied:
-# print(paste0("epoch=",winsize," value=",0))
-# load(paste0(path ,"EEgs_logs/correctionoverview_gb.RData"))
-# print(paste0("GB rowmeans=0: ",length(which(rowMeans(correction_overview) == 0))))
-# print(paste0("GB rowsum<3: ",length(which(rowSums(correction_overview) < 3))))
-# print(paste0("GB files: ",length(which(is.na(rowMeans(correction_overview)) == FALSE))))
-# load(paste0(path,"EEgs_logs/correctionoverview_ni.RData"))
-# print(paste0("NI rowmeans=0: ",length(which(rowMeans(correction_overview) == 0))))
-# print(paste0("NI rowsum<3: ",length(which(rowSums(correction_overview) < 3))))
-# print(paste0("NI files: ",length(which(is.na(rowMeans(correction_overview)) == FALSE))))
-
-# kk
 # TABLE 2
 limit2sdfeatutes = TRUE
 for (winsize in c(4)) {
