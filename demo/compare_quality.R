@@ -1,36 +1,37 @@
-rm(list=ls())
 # compare quality of data between two countries
 # I am using the counts of quality scores generated from the preprocessing stage
+rm(list=ls())
 G = read.csv("/media/windows-share/EEG/quality_overview_EEGs_gb_cleaned.csv")
 N = read.csv("/media/windows-share/EEG/quality_overview_EEGs_ni_cleaned.csv")
 cut = which(is.na(N$id) == TRUE)
 if (length(cut) > 0) N = N[-cut,]
 cut = which(is.na(G$id) == TRUE)
 if (length(cut) > 0) G = G[-cut,]
-# normalize scores
-
+# normalize scores (number of windows with a certain score)
+# as fraction of total number of windows
+# G = Guinea Bissau
+# N = Nigeria
+# closed  = eyes closed condition
 G$totalqc = G$closed_qc1 + G$closed_qc2 + G$closed_qc3 + G$closed_qc4
 G$closed_qc1 = G$closed_qc1 / G$totalqc
 G$closed_qc2 = G$closed_qc2 / G$totalqc
 G$closed_qc3 = G$closed_qc3 / G$totalqc
 G$closed_qc4 = G$closed_qc4 / G$totalqc
-
 N$totalqc = N$closed_qc1 + N$closed_qc2 + N$closed_qc3 + N$closed_qc4
 N$closed_qc1 = N$closed_qc1 / N$totalqc
 N$closed_qc2 = N$closed_qc2 / N$totalqc
 N$closed_qc3 = N$closed_qc3 / N$totalqc
 N$closed_qc4 = N$closed_qc4 / N$totalqc
-
 N$totalqu = N$closed_quality0 + N$closed_quality1 + N$closed_quality2
 N$closed_quality0 = N$closed_quality0 / N$totalqu
 N$closed_quality1 = N$closed_quality1 / N$totalqu
 N$closed_quality2 = N$closed_quality2 / N$totalqu
-
 G$totalqu = G$closed_quality0 + G$closed_quality1 + G$closed_quality2
 G$closed_quality0 = G$closed_quality0 / G$totalqu
 G$closed_quality1 = G$closed_quality1 / G$totalqu
 G$closed_quality2 = G$closed_quality2 / G$totalqu
 
+# Now calculate and print some simple descriptives
 # tt_qc1 = t.test(N$closed_qc1,G$closed_qc1,paired = FALSE,conf.level = 0.05)
 # tt_qc2 = t.test(N$closed_qc2,G$closed_qc2,paired = FALSE,conf.level = 0.05)
 # tt_qc3 = t.test(N$closed_qc3,G$closed_qc3,paired = FALSE,conf.level = 0.05)
@@ -59,7 +60,6 @@ GGu = round(GGu,digits=2)
 
 print(paste0(GGu,collapse = " "))
 print(paste0(NNu,collapse = " "))
-
 
 # correlations with age?
 NIMETA = read.csv("/media/windows-share/EEG/input/merged-meta-data_nigeria.csv")

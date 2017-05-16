@@ -32,7 +32,6 @@ if (doclean == TRUE) {
   knownerrors = read.csv(knownerrorfile)  
   clean_stats = clean_emotiv(datadir,metadatafile,outputdir,knownerrors,
                              protocoltimes,referencegroup,condition_start_closed,protocolvariable,outputdir_clean)
-  amountdata = clean_stats$amountdata
   correction_overview = clean_stats$correction_overview
   save(correction_overview,
        file=paste0(outputdir_logs,"/correctionoverview_",namecountry,".RData"))

@@ -1,4 +1,6 @@
 # script to convert all output into tables and figures for the paper
+# This script is not intended to be a generic function, but more a log of the code we used to generate some
+# of the (prelimenary) tables and figures
 rm(list=ls())
 graphics.off()
 path = "/media/windows-share/EEG/"
@@ -209,7 +211,7 @@ for (winsize in c(4)) { #,4
         # TTL = paste0(TTL_country)
         # corrplot(t(df),title = TTL,is.corr=FALSE,na.label = " ", cl.lim=c(0,0.18),cl.ratio=0.02,
         #          method="color",number.cex=0.9,cl.cex=1,tl.cex=0.9,tl.col="black",mar=c(0,0,2,0)) #circle"
-        
+    
         
       }
     }

@@ -3,3 +3,7 @@ classification_nigeria    train and evaluate classifier Nigeria
 dataprep_guineabissau     prepare data Guinea Bissau
 classification_guineabissau   train and evaluate classifier Guinea Bissau
 dataprep_nigeria          prepare data Nigeria
+compare_means_sd          code to compare characteriscs of data between the two countries
+compare_quality           code to compare quality of data between the two countries
+create_tables_figures     code to create tables and figures
+finalmodel                code to train and evaluae final model

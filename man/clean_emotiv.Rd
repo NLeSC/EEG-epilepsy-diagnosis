@@ -2,8 +2,9 @@
 \alias{clean_emotiv}
 \title{Clean emotive EEG data}
 \usage{
-clean_emotiv(datadir, metadatafile, outputdir, sf=128, gyrothreshold=30, mindur=4,
-  knownerrors, protocoltimes, referencegroup, condition_start_closed, protocolvariable)
+clean_emotiv(datadir, metadatafile,  outputdir, knownerrors, protocoltimes,
+referencegroup, condition_start_closed, protocolvariable, outputdir_clean,
+sf=128, gyrothreshold=30, mindur=4)
 }
 \arguments{
 \item{datadir}{data directory}
@@ -11,12 +12,6 @@ clean_emotiv(datadir, metadatafile, outputdir, sf=128, gyrothreshold=30, mindur=
 \item{metadatafile}{file with meta}
 
 \item{outputdir}{directory where output will be stored}
-
-\item{sf}{sample frequency}
-
-\item{gyrothreshold}{threshold for gyroscope signal above which data is considered not clean}
-
-\item{mindur}{required minimum duration (minutes) of the EEG time series}
 
 \item{knownerrors}{data frame with 3 columns for the person identifier,
 start time and end time corresponding to the data that needs to be ignored
@@ -29,8 +24,19 @@ Time format is minute:seconds}
   where the start was with eyes closed, e.g. "closed-3min-then-open-2min"}
 
 \item{referencegroup}{diagnosis label corresponding to the reference group, e.g. "Control"}
+
 \item{protocolvariable}{ Name of column in metadata that indicates the 
 experimental protocol, e.g. "Eyes.condition"}
+
+\item{outputdir_clean}{ Directory for storage of cleaned data}
+
+\item{sf}{sample frequency}
+
+\item{gyrothreshold}{threshold for gyroscope signal above which data is considered not clean}
+
+\item{mindur}{required minimum duration (minutes) of the EEG time series}
+
+
 }
 \value{
 matrix with overview of how much data was available per participant id

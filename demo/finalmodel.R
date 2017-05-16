@@ -134,7 +134,6 @@ NDQ$closed_quality2 = NDQ$closed_quality2 / NDQ$totalqu
 
 N3 = merge(N2,NDQ,by="id")
 
-
 N3$succes = abs(round(N3$Pred)-N3$Truth)
 fit = glm(succes ~ age+ sex+closed_mean_RAWCQ+closed_quality2+closed_quality1,family=binomial(link='logit'),data=N3)
 print(summary(fit))
