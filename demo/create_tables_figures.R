@@ -91,15 +91,17 @@ if (limit2sdfeatutes == TRUE) {
   Nfeatures = 140
 }
 for (winsize in c(4)) { #,4
+  
+  # outfile = paste0(path,paste0("/variablecontributions_aggregation",aggperid,".jpeg"))
+  outfile = paste0(path,paste0("/variablecontributions.jpeg"))
+  if (limit2sdfeatutes == TRUE) {
+    jpeg(filename=outfile, units="in",width = 7,height= 7,res=600,pointsize = 10)
+    par(oma=c(0,0,0,0),mar=c(3.5,3,3,0),mfrow=c(2,2))
+  } else {
+    jpeg(filename=outfile, units="in",width = 7,height= 7,res=600,pointsize = 10)
+    par(oma=c(0,0,0,0),mar=c(1,1,0,1),mfrow=c(1,2))
+  }
   for (aggperid in c(FALSE,TRUE)) {
-    outfile = paste0(path,paste0("/variablecontributions_aggregation",aggperid,".jpeg"))
-    if (limit2sdfeatutes == TRUE) {
-      jpeg(filename=outfile, units="in",width = 7,height= 5,res=600,pointsize = 10)
-      par(oma=c(0,0,0,0),mar=c(3.5,3,3,0),mfrow=c(1,2))
-    } else {
-      jpeg(filename=outfile, units="in",width = 7,height= 7,res=600,pointsize = 10)
-      par(oma=c(0,0,0,0),mar=c(1,1,0,1),mfrow=c(1,2))
-    }
     for (countrytrain in c("gb","ni")) {
       for (proto_i in 2) {
         # outfile = paste0(path,paste0("/variablecontributions_",aggperid,"_",countrytrain," ",proto_i,".jpeg"))
@@ -207,16 +209,26 @@ for (winsize in c(4)) { #,4
         
         # library(corrplot)
         if (aggperid == TRUE) {
-          maxy = 0.25
+          maxy = 0.22
+          heigthlegend = 0.2
         } else {
-          maxy = 0.11
+          maxy = 0.22
+          heigthlegend = 0.2 #0.015
         }
-        xspacing = 0.20
+        xspacing = 0.15
         CX = 1.1
         mgpVAL = c(2,0.5,0)
         
         TTL_country = "Guinea Bissau"
         if (countrytrain == "ni") TTL_country = "Nigeria"
+        
+        if (aggperid == TRUE) {
+          TTL_country = paste0(TTL_country," (aggregated)")
+        } else {
+          TTL_country = paste0(TTL_country," (not aggregated)")
+        }
+        
+        
         xposition = (1:7) -0.5 + (xspacing*(-1.5))
         if (countrytrain != "ni") {
           plot(xposition,as.numeric(df[1,]),type="p",pch=15,main=TTL_country,ylim=c(0,maxy),xlim=c(0,(7+(0.15*(4-3.5)))),cex.lab=1,cex.main=1.2,cex=CX,
@@ -227,8 +239,8 @@ for (winsize in c(4)) { #,4
         }
         
         axis(1,labels=c("Gamma","Beta","Alpha","Theta","Delta1","Delta2","Delta3"),
-             at = (1:7)-0.5,las=1,cex.axis=0.5)
-        xx = seq(0,maxy,by=0.02)
+             at = (1:7)-0.5,las=1,cex.axis=0.6)
+        xx = seq(0,maxy,by=0.04)
         if (countrytrain != "ni") axis(2,labels=paste0(xx),at = xx,cex.axis=0.7)
         xposition = (1:7) -0.5+ (xspacing*(-0.5))
         lines(xposition,as.numeric(df[2,]),type="p",pch=16,cex=CX)
@@ -241,9 +253,9 @@ for (winsize in c(4)) { #,4
           arrows(xposition, as.numeric(df[ai,]-dfsd[ai,]), xposition, as.numeric(df[ai,]+dfsd[ai,]), length=0.02, angle=90, code=3)
         }
         
-        if (countrytrain == "ni") legend(x = 1,y = 0.015,legend = c("minimum","maximum","mean","standard deviation"),pch = c(15:18),bty="o",cex=0.9,pt.cex = c(0.8,0.8,0.8,1),ncol=2) #rownames(df)
+        if (countrytrain == "ni") legend(x = 0.8,y = heigthlegend,legend = c("minimum","maximum","mean","standard deviation"),pch = c(15:18),bty="o",cex=0.9,pt.cex = c(0.8,0.8,0.8,1),ncol=2) #rownames(df)
         figure3data = rbind(df,dfsd)
-        write.csv(figure3data,file=paste0(path,"/figure3data.csv"))
+        write.csv(figure3data,file=paste0(path,"/figure3data_aggregated",aggperid,".csv"))
         # TTL = paste0(TTL_country)
         # corrplot(t(df),title = TTL,is.corr=FALSE,na.label = " ", cl.lim=c(0,0.18),cl.ratio=0.02,
         #          method="color",number.cex=0.9,cl.cex=1,tl.cex=0.9,tl.col="black",mar=c(0,0,2,0)) #circle"
@@ -251,6 +263,7 @@ for (winsize in c(4)) { #,4
         
       }
     }
-    dev.off()
+    
   }
+  dev.off()
 }
