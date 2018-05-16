@@ -3,7 +3,7 @@
 # of the (prelimenary) tables and figures
 rm(list=ls())
 graphics.off()
-path = "/media/windows-share/EEG/"
+path = "/media/vincent/EEG/"
 
 
 # Figure 1:
@@ -20,7 +20,7 @@ correctartifact = function(x) {
                           fill=c(stats::median(x[1:(sf*10)]),NA,stats::median(x[(length(x)-(sf*10)):length(x)])))
   return(x)
 }
-datadir = "/media/windows-share/EEG/EEGs_Nigeria"
+datadir = "/media/vincent/EEG/EEGs_Nigeria"
 file2plot = dir(datadir,full.names = TRUE)
 eegdata = read.csv(file2plot[5])
 
@@ -95,7 +95,7 @@ for (winsize in c(4)) { #,4
     outfile = paste0(path,paste0("/variablecontributions_aggregation",aggperid,".jpeg"))
     if (limit2sdfeatutes == TRUE) {
       jpeg(filename=outfile, units="in",width = 7,height= 5,res=600,pointsize = 10)
-      par(oma=c(0,0,0,0),mar=c(5.5,5,3,1),mfrow=c(1,2))
+      par(oma=c(0,0,0,0),mar=c(3.5,3,3,0),mfrow=c(1,2))
     } else {
       jpeg(filename=outfile, units="in",width = 7,height= 7,res=600,pointsize = 10)
       par(oma=c(0,0,0,0),mar=c(1,1,0,1),mfrow=c(1,2))
@@ -123,6 +123,11 @@ for (winsize in c(4)) { #,4
           cnt = cnt +1
         }
         VI_mean = rowMeans(VI)
+        confinter = function(x) {
+          x = (sd(x) / sqrt(length(x))) * 1.96
+        }
+        
+        VI_sd = apply(VI,1,confinter)
         rnames = rownames(VI)
         
         # extract wavelet level from variable names non pli, for non-wavelet variables assigned level 0
@@ -150,13 +155,16 @@ for (winsize in c(4)) { #,4
           NV = length(unique(wvarnames_without_level))
         }
         
-
+        
         VI_matrix = matrix(0,NV,7)
+        VIsd_matrix = matrix(0,NV,7)
         if (limit2sdfeatutes == FALSE) {
           VI_matrix[1:length(L0),1] = VI_mean[L0] # raw pli
+          VIsd_matrix[1:length(L0),1] = VI_sd[L0] # raw pli
         }
         for (i in 1:7) {
           VI_matrix[(length(L0)+1):NV,i] = VI_mean[which(level == i)]
+          VIsd_matrix[(length(L0)+1):NV,i] = VI_sd[which(level == i)]
         }
         
         dfrownames = c(rnames[L0],unique(wvarnames_with_level),unique(wvarnames_without_level))
@@ -193,25 +201,53 @@ for (winsize in c(4)) { #,4
         dfrownames = sapply(dfrownames,reorder.sd.wavelet )
         df = data.frame(VI_matrix,row.names=dfrownames)
         names(df) = paste0("Level",1:7)
+        
+        dfsd = data.frame(VIsd_matrix,row.names=dfrownames)
+        names(dfsd) = paste0("Level",1:7)
+        
         # library(corrplot)
-
+        if (aggperid == TRUE) {
+          maxy = 0.25
+        } else {
+          maxy = 0.11
+        }
+        xspacing = 0.20
+        CX = 1.1
+        mgpVAL = c(2,0.5,0)
+        
         TTL_country = "Guinea Bissau"
         if (countrytrain == "ni") TTL_country = "Nigeria"
-
-        plot(as.numeric(df[1,]),type="p",pch=0,main=TTL_country,ylim=c(0,0.15),cex.lab=1.1,
-             bty="l",axes = FALSE,xlab="Wavelet",ylab="Importance (mean decrease in Gini)",mgp=c(3.5,1,0)) #,cex.axis=0.4)
-        axis(1,labels=c("Gamma","Beta","Alpha","Theta","Delta 2-4Hz","Delta 1-2Hz","Delta <1Hz"),
-             at = 1:7,las=3,cex.axis=0.8)
-        xx = seq(0,0.15,by=0.05)
-        axis(2,labels=paste0(xx),at = xx,cex.axis=0.8)
-        lines(as.numeric(df[2,]),type="p",pch=1)
-        lines(as.numeric(df[3,]),type="p",pch=2)
-        lines(as.numeric(df[4,]),type="p",pch=3)
-        legend("topleft",legend = c("minimum sd","maximum sd","mean sd","sd of the sd"),pch = c(0:3,19),bty="o",cex=0.9) #rownames(df)
+        xposition = (1:7) -0.5 + (xspacing*(-1.5))
+        if (countrytrain != "ni") {
+          plot(xposition,as.numeric(df[1,]),type="p",pch=15,main=TTL_country,ylim=c(0,maxy),xlim=c(0,(7+(0.15*(4-3.5)))),cex.lab=1,cex.main=1.2,cex=CX,
+               bty="n",axes = FALSE,xlab="Wavelet",ylab="Importance (decrease in Gini)",mgp=mgpVAL) #,cex.axis=0.8)
+        } else {
+          plot(xposition,as.numeric(df[1,]),type="p",pch=15,main=TTL_country,ylim=c(0,maxy),xlim=c(0,(7+(0.15*(4-3.5)))),cex.lab=1,cex.main=1.2,cex=CX,
+               bty="n",axes = FALSE,xlab="Wavelet",ylab="",mgp=mgpVAL) #,cex.axis=0.8)
+        }
+        
+        axis(1,labels=c("Gamma","Beta","Alpha","Theta","Delta1","Delta2","Delta3"),
+             at = (1:7)-0.5,las=1,cex.axis=0.5)
+        xx = seq(0,maxy,by=0.02)
+        if (countrytrain != "ni") axis(2,labels=paste0(xx),at = xx,cex.axis=0.7)
+        xposition = (1:7) -0.5+ (xspacing*(-0.5))
+        lines(xposition,as.numeric(df[2,]),type="p",pch=16,cex=CX)
+        xposition = (1:7) -0.5+ (xspacing*(0.5)) 
+        lines(xposition,as.numeric(df[3,]),type="p",pch=17,cex=CX)
+        xposition = (1:7) -0.5+ (xspacing*(1.5)) 
+        lines(xposition,as.numeric(df[4,]),type="p",pch=18,cex=CX+0.2)
+        for (ai in 1:4) {
+          xposition = (1:7) -0.5+ (xspacing*(ai-2.5)) 
+          arrows(xposition, as.numeric(df[ai,]-dfsd[ai,]), xposition, as.numeric(df[ai,]+dfsd[ai,]), length=0.02, angle=90, code=3)
+        }
+        
+        if (countrytrain == "ni") legend(x = 1,y = 0.015,legend = c("minimum","maximum","mean","standard deviation"),pch = c(15:18),bty="o",cex=0.9,pt.cex = c(0.8,0.8,0.8,1),ncol=2) #rownames(df)
+        figure3data = rbind(df,dfsd)
+        write.csv(figure3data,file=paste0(path,"/figure3data.csv"))
         # TTL = paste0(TTL_country)
         # corrplot(t(df),title = TTL,is.corr=FALSE,na.label = " ", cl.lim=c(0,0.18),cl.ratio=0.02,
         #          method="color",number.cex=0.9,cl.cex=1,tl.cex=0.9,tl.col="black",mar=c(0,0,2,0)) #circle"
-    
+        
         
       }
     }
