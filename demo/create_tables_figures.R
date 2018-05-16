@@ -93,7 +93,7 @@ if (limit2sdfeatutes == TRUE) {
 for (winsize in c(4)) { #,4
   
   # outfile = paste0(path,paste0("/variablecontributions_aggregation",aggperid,".jpeg"))
-  outfile = paste0(path,paste0("/variablecontributions.jpeg"))
+  outfile = paste0(path,paste0("/Figure3.jpeg"))
   if (limit2sdfeatutes == TRUE) {
     jpeg(filename=outfile, units="in",width = 7,height= 7,res=600,pointsize = 10)
     par(oma=c(0,0,0,0),mar=c(3.5,3,3,0),mfrow=c(2,2))
@@ -216,7 +216,7 @@ for (winsize in c(4)) { #,4
           heigthlegend = 0.2 #0.015
         }
         xspacing = 0.15
-        CX = 1.1
+        CX = 1.3
         mgpVAL = c(2,0.5,0)
         
         TTL_country = "Guinea Bissau"
@@ -247,13 +247,13 @@ for (winsize in c(4)) { #,4
         xposition = (1:7) -0.5+ (xspacing*(0.5)) 
         lines(xposition,as.numeric(df[3,]),type="p",pch=17,cex=CX)
         xposition = (1:7) -0.5+ (xspacing*(1.5)) 
-        lines(xposition,as.numeric(df[4,]),type="p",pch=18,cex=CX+0.2)
+        lines(xposition,as.numeric(df[4,]),type="p",pch=10,cex=CX)
         for (ai in 1:4) {
           xposition = (1:7) -0.5+ (xspacing*(ai-2.5)) 
           arrows(xposition, as.numeric(df[ai,]-dfsd[ai,]), xposition, as.numeric(df[ai,]+dfsd[ai,]), length=0.02, angle=90, code=3)
         }
         
-        if (countrytrain == "ni") legend(x = 0.8,y = heigthlegend,legend = c("minimum","maximum","mean","standard deviation"),pch = c(15:18),bty="o",cex=0.9,pt.cex = c(0.8,0.8,0.8,1),ncol=2) #rownames(df)
+        if (countrytrain == "ni") legend(x = 0.8,y = heigthlegend,legend = c("minimum","maximum","mean","standard deviation"),pch = c(15:17,10),bty="o",cex=0.9,pt.cex = c(0.8,0.8,0.8,1),ncol=2) #rownames(df)
         figure3data = rbind(df,dfsd)
         write.csv(figure3data,file=paste0(path,"/figure3data_aggregated",aggperid,".csv"))
         # TTL = paste0(TTL_country)
