@@ -255,7 +255,7 @@ for (winsize in c(4)) { #,4
         
         if (countrytrain == "ni") legend(x = 0.8,y = heigthlegend,legend = c("minimum","maximum","mean","standard deviation"),pch = c(15:17,10),bty="o",cex=0.9,pt.cex = c(0.8,0.8,0.8,1),ncol=2) #rownames(df)
         figure3data = rbind(df,dfsd)
-        write.csv(figure3data,file=paste0(path,"/figure3data_aggregated",aggperid,".csv"))
+        write.csv(figure3data,file=paste0(path,"/figure3data_aggregated",aggperid,"_country",countrytrain,".csv"))
         # TTL = paste0(TTL_country)
         # corrplot(t(df),title = TTL,is.corr=FALSE,na.label = " ", cl.lim=c(0,0.18),cl.ratio=0.02,
         #          method="color",number.cex=0.9,cl.cex=1,tl.cex=0.9,tl.col="black",mar=c(0,0,2,0)) #circle"
